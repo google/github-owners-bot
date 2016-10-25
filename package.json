@@ -4,7 +4,7 @@
   "private": true,
   "version": "0.0.1",
   "repository": "http://github.com/ampproject/github-owners-bot",
-  "description": "A github web server that lists down potential reviewers for a pull request using OWNER files in a repository.",
+  "description": "A web server that lists down potential reviewers for a github pull request using OWNER files in a repository.",
   "engines": {
     "node": "^6.9.1"
   },

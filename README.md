@@ -16,7 +16,7 @@ limitations under the License.
 
 # Github Owners Bot
 
-A github web server that lists down potential reviewers for a pull request
+A web server that lists down potential reviewers for a github pull request
 using OWNER files in a repository.
 
 ## Deploying
@@ -33,3 +33,7 @@ A few Environment Variables need to be setup on the GCE start-up script.
   github.
 - **GITHUB_REPO_DIR** The directory path the clone of the repo is located.
 - **GITHUB_USERNAME** The username of the bot.
+
+## Disclaimer
+
+This is not an official Google product.
