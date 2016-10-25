@@ -1,0 +1,7 @@
+[include]
+app.js
+routes/
+src/
+
+[libs]
+declarations/

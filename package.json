@@ -1,0 +1,57 @@
+{
+  "name": "github owners bot",
+  "author": "Google Inc.",
+  "private": true,
+  "version": "0.0.1",
+  "repository": "http://github.com/ampproject/github-owners-bot",
+  "description": "A github web server that lists down potential reviewers for a pull request using OWNER files in a repository.",
+  "engines": {
+    "node": "^6.9.1"
+  },
+  "scripts": {
+    "start": "node dist/app.js",
+    "monitor": "nodemon app.js",
+    "deploy": "gcloud app deploy app.yaml",
+    "test": "ava",
+    "flow": "flow; test $? -eq 0 -o $? -eq 2"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@google/cloud-debug": "0.8.3",
+    "@google/cloud-trace": "0.5.5",
+    "bluebird": "3.4.6",
+    "body-parser": "1.15.2",
+    "express": "4.14.0",
+    "express-session": "1.14.0",
+    "express-winston": "2.0.0",
+    "gcloud": "0.37.0",
+    "lodash": "^4.16.4",
+    "nconf": "^0.8.4",
+    "request": "2.74.0",
+    "winston": "2.2.0",
+    "yamljs": "^0.2.8"
+  },
+  "devDependencies": {
+    "ava": "^0.16.0",
+    "babel-eslint": "^7.0.0",
+    "babel-plugin-transform-flow-strip-types": "^6.14.0",
+    "babel-preset-es2015-loose": "^8.0.0",
+    "del": "^2.2.2",
+    "eslint": "^3.8.1",
+    "flow-bin": "^0.33.0",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
+    "gulp-eslint": "^3.0.1",
+    "gulp-flowtype": "^1.0.0",
+    "gulp-load-plugins": "^1.3.0",
+    "minimist": "^1.2.0"
+  },
+  "ava": {
+    "files": [
+      "tests/**/{test,test-*}.js"
+    ],
+    "concurrency": 5,
+    "tap": true,
+    "failFast": true
+  }
+}
