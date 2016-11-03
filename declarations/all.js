@@ -27,6 +27,13 @@ type OwnersMap = {
   [key: string]: Owner
 }
 
+type GitHubStatusPost = {
+  state: "success" | "error" | "failure",
+  target_url: string,
+  description: string,
+  context: string
+}
+
 interface PullRequestJson {
 }
 

@@ -33,7 +33,7 @@ function yamlReader(str: string): mixed[] {
  * passed in `formatReader` and returns an `OwnersMap`.
  */
 function ownersParser(formatReader: (str: string) => mixed[],
-    pathToRepoDir: string, ownersPaths: string[]): OwnersMap {
+    pathToRepoDir: string, ownersPaths: string[], author): OwnersMap {
   const promises = ownersPaths.map(ownerPath => {
     const fullPath = path.resolve(pathToRepoDir, ownerPath);
     return fs.readFileAsync(fullPath).then(file => {
@@ -41,15 +41,15 @@ function ownersParser(formatReader: (str: string) => mixed[],
     });
   });
   return bb.all(promises).then(owners => {
-    return createOwnersMap(owners);
+    return createOwnersMap(owners, author);
   });
 }
 
 /**
  * Retrieves all the OWNERS paths inside a repository.
  */
-export function getOwnersFilesForBranch(dirPath: string,
-    targetBranch: string): Promise<string[]> {
+export function getOwnersFilesForBranch(author: string, dirPath: string,
+    targetBranch: string): OwnersMap {
   // NOTE: for some reason `git ls-tree --full-tree -r HEAD **/OWNERS*
   // doesn't work from here.
   return exec(`cd ${dirPath} && git checkout ${targetBranch} ` +
@@ -60,7 +60,7 @@ export function getOwnersFilesForBranch(dirPath: string,
         const ownersPaths = stdoutToArray(res)
           // Remove unneeded string. We only want the file paths.
           .filter(x => !/your branch is up-to-date/i.test(x));
-        return ownersParser(yamlReader, dirPath, ownersPaths);
+        return ownersParser(yamlReader, dirPath, ownersPaths, author);
       });
 }
 

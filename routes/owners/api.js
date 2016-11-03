@@ -35,11 +35,11 @@ function getOwners(pr: PullRequest) : Promise<string[]> {
   return git.pullLatestForRepo(GITHUB_REPO_DIR, 'origin', 'master').then(() => {
     const promises = bb.all([
       pr.getFiles(),
-      git.getOwnersFilesForBranch(GITHUB_REPO_DIR, 'master'),
+      git.getOwnersFilesForBranch(pr.author, GITHUB_REPO_DIR, 'master'),
     ]);
     return promises.then(function([files: RepoFile[], ownersMap: OwnersMap]) {
       return findOwnersUsernames(files, ownersMap)
-      // Make sure to remove author from usernames candidates.
+          // Make sure to remove author from usernames candidates.
           .filter(x => x !== `@${pr.author}`);
     });
   });
@@ -65,21 +65,22 @@ router.post('/', function(req, res) {
   }
 
   const body = req.body;
-  if (body && body.pull_request && prActionTypes.indexOf(body.action) !== -1) {
-    const pr = new PullRequest(body.pull_request);
-    // Temporarily only turn on for @erwinmombay
-    if (pr.author === GITHUB_USERNAME || pr.author !== 'erwinmombay') {
-      return res.status(200).send('ok');
-    }
-    return getOwners(pr).then(usernames => {
-      return pr.getCommentsByAuthor(GITHUB_USERNAME).then(comments => {
-        return maybePostReviewerComment(res, pr, usernames, comments);
+  if (body && body.pull_request) {
+    if (prActionTypes.indexOf(body.action) !== -1) {
+      const pr = new PullRequest(body.pull_request);
+      // Temporarily only turn on for @erwinmombay
+      if (pr.author === GITHUB_USERNAME || pr.author !== 'erwinmombay') {
+        return res.status(200).send('ok');
+      }
+      return getOwners(pr).then(usernames => {
+        return pr.getCommentsByAuthor(GITHUB_USERNAME).then(comments => {
+          return maybePostReviewerComment(res, pr, usernames, comments);
+        });
+      }).catch(() => {
+        res.status(500).send('E2: Something went wrong.');
       });
-    }).catch(() => {
-      res.status(500).send('E2: Something went wrong.');
-    });
+    }
   }
-  res.status(200).send('ok');
 });
 
 function maybePostReviewerComment(res: *, pr: PullRequest, usernames: string[],
@@ -109,3 +110,4 @@ function maybePostReviewerComment(res: *, pr: PullRequest, usernames: string[],
     res.status(200).send('ok');
   });
 }
+

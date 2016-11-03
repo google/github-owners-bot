@@ -50,6 +50,9 @@ export class PullRequest {
   project: string;
   repo: string;
   cloneUrl: string;
+  statusesUrl: string;
+  reviewCommentsUrl: string;
+  commentsUrl: string;
 
   constructor(json: any) {
     this.id = json.number;
@@ -66,8 +69,13 @@ export class PullRequest {
     this.project = json.base.repo.owner.login;
     this.repo = json.base.repo.name;
     this.cloneUrl = json.base.repo.clone_url;
-  }
 
+    this.statusesUrl = json.statuses_url;
+    // Comments on code pulls/${id}/comments
+    this.reviewCommentsUrl = json.review_comments_url;
+    // Comments on Pull Request issues/${id}/comments
+    this.commentsUrl = json.comments_url;
+  }
 
   /**
    * Retrieves the pull request json payload from the github API
@@ -97,15 +105,12 @@ export class PullRequest {
   }
 
   postIssuesComment(body: string) {
-    const postHeaders = Object.assign({
-      'Authorization': `token ${GITHUB_ACCESS_TOKEN}`,
-    }, headers);
     return request({
       url: `https://api.github.com/repos/${this.project}/${this.repo}/issues/` +
           `${this.id}/comments`,
       json: true,
       method: 'POST',
-      headers: postHeaders,
+      headers: this.getPostHeaders_(),
       body: {'body': body},
     });
   }
@@ -122,6 +127,22 @@ export class PullRequest {
           `${type}/${this.id}/comments`,
       method: 'GET', qs, headers,
     }).then(res => JSON.parse(res.body));
+  }
+
+  getPostHeaders_() {
+    return Object.assign({
+      'Authorization': `token ${GITHUB_ACCESS_TOKEN}`,
+    }, headers);
+  }
+
+  setStatus(body: GitHubStatusPost) {
+    return request({
+      url: this.statusesUrl,
+      json: true,
+      method: 'POST',
+      headers: this.getPostHeaders_(),
+      body: {'body': body},
+    });
   }
 }
 

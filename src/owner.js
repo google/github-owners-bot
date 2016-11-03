@@ -98,9 +98,14 @@ export function findOwners(file: RepoFile, ownersMap: OwnersMap): Owner {
   return owner;
 }
 
-export function createOwnersMap(owners: Owner[]): OwnersMap {
+export function createOwnersMap(owners: Owner[], exclude: string): OwnersMap {
   return owners.reduce((ownersMap: OwnersMap, owner: Owner) => {
-    ownersMap[owner.dirname] = owner;
+    // Remove exclude owners from the list. (This is usually the author of
+    // GitHub Pull Request.
+    owner.dirOwners = owner.dirOwners.filter(x => x != exclude);
+    if (owner.dirOwners.length) {
+      ownersMap[owner.dirname] = owner;
+    }
     return ownersMap;
   }, Object.create(null));
 }

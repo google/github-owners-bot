@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-var gulp = require('gulp');
-var babel = require('gulp-babel');
-var flow = require('gulp-flowtype');
-var eslint = require('gulp-eslint');
-var del = require('del');
-var argv = require('minimist')(process.argv.slice(2));
+const gulp = require('gulp');
+const babel = require('gulp-babel');
+const flow = require('gulp-flowtype');
+const eslint = require('gulp-eslint');
+const del = require('del');
+const argv = require('minimist')(process.argv.slice(2));
+const ava = require('gulp-ava');
 
-var sources = ['{app,config}.js', '{src,routes}/**/*.js'];
+const sources = ['{app,config}.js', '{src,routes}/**/*.js'];
+
+const tests = ['tests/**/{test,test-*}.js'];
 
 gulp.task('default', ['flow', 'lint', 'babel']);
 
@@ -29,6 +32,10 @@ gulp.task('babel', () => {
   return gulp.src(sources)
     .pipe(babel())
     .pipe(gulp.dest('dist'));
+});
+
+gulp.task('test', () => {
+  return gulp.src(tests).pipe(ava({verbose: true}));
 });
 
 gulp.task('flow', () => {
@@ -56,4 +63,8 @@ gulp.task('clean', (cb) => {
 
 gulp.task('watch', function() {
   return gulp.watch(sources, ['default']);
+});
+
+gulp.task('watch:test', function() {
+  return gulp.watch(tests, ['test']);
 });

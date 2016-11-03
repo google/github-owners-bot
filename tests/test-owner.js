@@ -14,56 +14,74 @@
  * limitations under the License.
  */
 
-var test = require('ava');
-var owner = require('../src/owner');
-var File = require('../src/file').File;
-var findOwnersUsernames = owner.findOwnersUsernames;
-var Owner = owner.Owner;
-var createOwnersMap = owner.createOwnersMap;
+import {RepoFile} from '../src/repo-file';
+import test from 'ava';
+import {findOwnersUsernames, createOwnersMap, Owner} from '../src/owner';
 
 
-var pathToRepo = '/path/to/repo';
+const pathToRepo = '/path/to/repo';
 
-var ownersMap = createOwnersMap([
+const defaultStruct = [
   new Owner(['person-0', 'person-1'], pathToRepo, 'OWNERS.yaml'),
   new Owner(['person-0', 'build-system-person-0'],
       pathToRepo, 'build-system/OWNERS.yaml'),
   new Owner(['some-extension-owner-0'],
       pathToRepo, 'extensions/0.1/some-extension/OWNERS.yaml'),
-]);
+  new Owner(['person-1'],
+      pathToRepo,
+      'extensions/0.1/some-extension-with-only-person-0/OWNERS.yaml'),
+];
+
+function getOwnersMap(author = 'external-author') {
+  return createOwnersMap(defaultStruct, author);
+}
 
 test('find top level owner for top level file', t => {
   t.plan(1);
-  var owners = findOwnersUsernames([new File('README.md')], ownersMap);
-  t.deepEqual(owners, ['person-0', 'person-1']);
+  var owners = findOwnersUsernames([new RepoFile('README.md')],
+      getOwnersMap());
+  t.deepEqual(owners, ['@person-0', '@person-1']);
 });
 
 test('find top level owner for deep file with no dir owner', t => {
   t.plan(1);
   var owners = findOwnersUsernames([
-    new File('extensions/0.1/some-other-extension/some-other-extension.js'),
-  ], ownersMap);
-  t.deepEqual(owners, ['person-0', 'person-1']);
+    new RepoFile('extensions/0.1/some-other-extension/some-other-extension.js'),
+  ], getOwnersMap());
+  t.deepEqual(owners, ['@person-0', '@person-1']);
 });
 
 test('find union of owners for deep level dir owner and top level file', t => {
   t.plan(1);
   var owners = findOwnersUsernames([
-    new File('README.md'),
-    new File('extensions/0.1/some-extension/some-extension.js'),
-  ], ownersMap);
-  t.deepEqual(owners, ['person-0', 'person-1', 'some-extension-owner-0']);
+    new RepoFile('README.md'),
+    new RepoFile('extensions/0.1/some-extension/some-extension.js'),
+  ], getOwnersMap());
+  t.deepEqual(owners, ['@person-0', '@person-1', '@some-extension-owner-0']);
 });
 
 test('find intersection for dir', t => {
   t.plan(1);
   var owners = findOwnersUsernames([
-    new File('README.md'),
-    new File('build-system/some-dir/some-file.java'),
-  ], ownersMap);
-  t.deepEqual(owners, ['person-0']);
+    new RepoFile('README.md'),
+    new RepoFile('build-system/some-dir/some-file.java'),
+  ], getOwnersMap());
+  t.deepEqual(owners, ['@person-0']);
 });
 
-test('traverse up if owner is also author', () => {
-  
+test('find folder level owner', t => {
+  t.plan(1);
+  var owners = findOwnersUsernames([
+    new RepoFile('extensions/0.1/some-extension/some-extension.js'),
+  ], getOwnersMap());
+  t.deepEqual(owners, ['@some-extension-owner-0']);
+});
+
+test('find parent owner if folder owner is also PR author', t => {
+  t.plan(1);
+  var owners = findOwnersUsernames([
+    new RepoFile('extensions/0.1/some-extension-with-only-person-0/' +
+        'some-extension.js'),
+  ], getOwnersMap('person-1'));
+  t.deepEqual(owners, ['@person-0']);
 });

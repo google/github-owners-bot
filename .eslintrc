@@ -28,7 +28,8 @@
     "context": false,
     "global": false,
     "describes": true,
-    "OwnersMap": false
+    "OwnersMap": false,
+    "GitHubStatusPost": false
   },
   "rules": {
     "array-bracket-spacing": [2, "never"],

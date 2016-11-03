@@ -1,12 +1,10 @@
 {
-  "name": "github owners bot",
+  "name": "github-owners-bot",
   "author": "Google Inc.",
   "private": true,
   "version": "0.0.1",
   "repository": "http://github.com/ampproject/github-owners-bot",
-  "description": "A web service that suggests reviewers for a GitHub pull request based on OWNERS files and enforces reviews by OWNERS as a GitHub status check.
-
-",
+  "description": "A web service that suggests reviewers for a GitHub pull request based on OWNERS files and enforces reviews by OWNERS as a GitHub status check.",
   "engines": {
     "node": "^6.9.1"
   },
@@ -34,7 +32,6 @@
     "yamljs": "^0.2.8"
   },
   "devDependencies": {
-    "ava": "^0.16.0",
     "babel-eslint": "^7.0.0",
     "babel-plugin-transform-flow-strip-types": "^6.14.0",
     "babel-preset-es2015-loose": "^8.0.0",
@@ -42,6 +39,7 @@
     "eslint": "^3.8.1",
     "flow-bin": "^0.33.0",
     "gulp": "^3.9.1",
+    "gulp-ava": "^0.14.1",
     "gulp-babel": "^6.1.2",
     "gulp-eslint": "^3.0.1",
     "gulp-flowtype": "^1.0.0",
@@ -50,10 +48,14 @@
   },
   "ava": {
     "files": [
-      "tests/**/{test,test-*}.js"
+      "tests.dist/**/{test,test-*}.js"
     ],
     "concurrency": 5,
     "tap": true,
-    "failFast": true
+    "failFast": true,
+    "require": [
+      "babel-register"
+    ],
+    "babel": "inherit"
   }
 }
