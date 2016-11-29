@@ -165,3 +165,13 @@ export class PullRequestComment {
     this.url = json.url;
   }
 }
+
+export function findLastReviewersList(
+    comments: PullRequestComment[]): ?string {
+  comments = comments.sort((a, b) => b.updatedAt - a.updatedAt);
+  if (comments[0]) {
+    const lastPost = comments[0].body.split('\n').filter(x => !!x);
+    return lastPost.filter(x => /\/to/.test(x))[0];
+  }
+  return null;
+}

@@ -37,11 +37,7 @@ function getOwners(pr: PullRequest) : Promise<string[]> {
       pr.getFiles(),
       git.getOwnersFilesForBranch(pr.author, GITHUB_REPO_DIR, 'master'),
     ]);
-    return promises.then(function([files: RepoFile[], ownersMap: OwnersMap]) {
-      return findOwnersUsernames(files, ownersMap)
-          // Make sure to remove author from usernames candidates.
-          .filter(x => x !== `@${pr.author}`);
-    });
+    return promises.then(findOwnersUsernames);
   });
 }
 
@@ -86,7 +82,6 @@ router.post('/', function(req, res) {
 function maybePostReviewerComment(res: *, pr: PullRequest, usernames: string[],
     comments: PullRequestComment[]): Promise<*>|void {
   // Descending sort. Newest to Oldest comments
-  comments = comments.sort((a, b) => b.updatedAt - a.updatedAt);
   const curReviewersList = `/to ${usernames.join(',')}`;
   const body = `${curReviewersList}`;
   if (comments[0]) {
@@ -110,4 +105,3 @@ function maybePostReviewerComment(res: *, pr: PullRequest, usernames: string[],
     res.status(200).send('ok');
   });
 }
-
