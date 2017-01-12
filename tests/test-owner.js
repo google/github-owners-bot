@@ -83,5 +83,5 @@ test('find parent owner if folder owner is also PR author', t => {
     new RepoFile('extensions/0.1/some-extension-with-only-person-0/' +
         'some-extension.js'),
   ], getOwnersMap('person-1'));
-  t.deepEqual(owners, ['@person-0']);
+  t.deepEqual(owners, ['@person-1']);
 });

@@ -167,11 +167,15 @@ export class PullRequestComment {
 }
 
 export function findLastReviewersList(
-    comments: PullRequestComment[]): ?string {
+    comments: PullRequestComment[]): ?PullRequestComment {
   comments = comments.sort((a, b) => b.updatedAt - a.updatedAt);
-  if (comments[0]) {
-    const lastPost = comments[0].body.split('\n').filter(x => !!x);
-    return lastPost.filter(x => /\/to/.test(x))[0];
+  for (let i = 0; i < comments.length; i++) {
+    const comment = comments[i];
+    const lines = comment.body.split('\n').filter(x => !!x);
+    const reviewerList = lines.filter(x => /\/to/.test(x))[0];
+    if (reviewerList) {
+      return comment;
+    }
   }
   return null;
 }

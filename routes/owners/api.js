@@ -69,6 +69,16 @@ router.post('/', function(req, res) {
         return res.status(200).send('ok');
       }
       return getOwners(pr).then(usernames => {
+        if (usernames.indexOf(`@${pr.author}`)) {
+          return pr.setStatus({
+            state: 'successj',
+            target_url: 'ampproject.org',
+            description: 'proper approvers met',
+            context: 'ampproject/owners-bot',
+          }).then(() => {
+            res.status(200).send('ok');
+          });
+        }
         return pr.getCommentsByAuthor(GITHUB_USERNAME).then(comments => {
           return maybePostReviewerComment(res, pr, usernames, comments);
         });
@@ -92,16 +102,30 @@ function maybePostReviewerComment(res: *, pr: PullRequest, usernames: string[],
     // of reviewers.
     if (lastReviewersList !== curReviewersList) {
       return pr.postIssuesComment(body).then(() => {
-        res.status(200).send('ok');
+        return pr.setStatus({
+          state: 'failure',
+          target_url: 'ampproject.org',
+          description: 'missing proper approvers',
+          context: 'ampproject/owners-bot',
+        }).then(() => {
+          res.status(200).send('ok');
+        });
       });
     }
-    // No need to comment as the list of reviewers is the same.
+    // No need to post a comment as the list of reviewers is the same.
     res.status(200).send('ok');
     return;
   }
 
   // This is the first time the bot is posting a list of reviewers.
   return pr.postIssuesComment(body).then(() => {
-    res.status(200).send('ok');
+    return pr.setStatus({
+      state: 'failure',
+      target_url: 'ampproject.org',
+      description: 'missing proper approvers',
+      context: 'ampproject/owners-bot',
+    }).then(() => {
+      res.status(200).send('ok');
+    });
   });
 }

@@ -29,6 +29,10 @@ test('find the reviewer comment', t => {
   t.plan(1);
   return pr.getComments().then(comments => {
     const list = findLastReviewersList(comments);
-    t.is(list, ['/to hello world']);
+    t.is(list.body.trim(), '/to @donttrustthisbot');
   });
+});
+
+test('should approve if author is also owner', t => {
+  
 });

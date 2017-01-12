@@ -33,16 +33,14 @@ function yamlReader(str: string): mixed[] {
  * passed in `formatReader` and returns an `OwnersMap`.
  */
 function ownersParser(formatReader: (str: string) => mixed[],
-    pathToRepoDir: string, ownersPaths: string[], author): OwnersMap {
+    pathToRepoDir: string, ownersPaths: string[]): OwnersMap {
   const promises = ownersPaths.map(ownerPath => {
     const fullPath = path.resolve(pathToRepoDir, ownerPath);
     return fs.readFileAsync(fullPath).then(file => {
       return new Owner(formatReader(file.toString()), pathToRepoDir, ownerPath);
     });
   });
-  return bb.all(promises).then(owners => {
-    return createOwnersMap(owners, author);
-  });
+  return bb.all(promises).then(createOwnersMap);
 }
 
 /**

@@ -9,7 +9,7 @@
     "node": "^6.9.1"
   },
   "scripts": {
-    "start": "node dist/app.js",
+    "start": "gulp && node dist/app.js",
     "monitor": "nodemon app.js",
     "deploy": "gcloud app deploy app.yaml",
     "test": "ava",
