@@ -6,10 +6,10 @@
   "repository": "http://github.com/ampproject/github-owners-bot",
   "description": "A web service that suggests reviewers for a GitHub pull request based on OWNERS files and enforces reviews by OWNERS as a GitHub status check.",
   "engines": {
-    "node": "^6.9.1"
+    "node": "6.9.1"
   },
   "scripts": {
-    "start": "gulp && node dist/app.js",
+    "start": "node dist/app.js",
     "monitor": "nodemon app.js",
     "deploy": "gcloud app deploy app.yaml",
     "test": "ava",
@@ -25,27 +25,27 @@
     "express-session": "1.14.0",
     "express-winston": "2.0.0",
     "gcloud": "0.37.0",
-    "lodash": "^4.16.4",
-    "nconf": "^0.8.4",
+    "lodash": "4.16.4",
+    "nconf": "0.8.4",
     "request": "2.74.0",
     "winston": "2.2.0",
-    "yamljs": "^0.2.8"
+    "yamljs": "0.2.8"
   },
   "devDependencies": {
-    "babel-eslint": "^7.0.0",
-    "babel-plugin-transform-flow-strip-types": "^6.14.0",
-    "babel-preset-es2015-loose": "^8.0.0",
-    "del": "^2.2.2",
-    "eslint": "^3.8.1",
-    "flow-bin": "^0.33.0",
-    "gulp": "^3.9.1",
-    "gulp-ava": "^0.14.1",
-    "gulp-babel": "^6.1.2",
-    "gulp-eslint": "^3.0.1",
-    "gulp-flowtype": "^1.0.0",
-    "gulp-load-plugins": "^1.3.0",
-    "minimist": "^1.2.0",
-    "sinon": "^1.17.6"
+    "babel-eslint": "7.0.0",
+    "babel-plugin-transform-flow-strip-types": "6.14.0",
+    "babel-preset-es2015-loose": "8.0.0",
+    "del": "2.2.2",
+    "eslint": "3.8.1",
+    "flow-bin": "0.33.0",
+    "gulp": "3.9.1",
+    "gulp-ava": "0.14.1",
+    "gulp-babel": "6.1.2",
+    "gulp-eslint": "3.0.1",
+    "gulp-flowtype": "1.0.0",
+    "gulp-load-plugins": "1.3.0",
+    "minimist": "1.2.0",
+    "sinon": "1.17.6"
   },
   "ava": {
     "files": [
