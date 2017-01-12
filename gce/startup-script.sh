@@ -54,7 +54,8 @@ git clone https://source.developers.google.com/p/$PROJECTID "${APP_DIR}"
 
 # Install app dependencies
 cd "${APP_DIR}"
-npm install
+npm install -g yarn
+/opt/nodejs/bin/yarn
 node_modules/gulp/bin/gulp.js babel
 
 git clone "https://github.com/${REPO}.git" "${REPO_DIR}"

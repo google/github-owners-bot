@@ -37,7 +37,11 @@ function getOwners(pr: PullRequest) : Promise<string[]> {
       pr.getFiles(),
       git.getOwnersFilesForBranch(pr.author, GITHUB_REPO_DIR, 'master'),
     ]);
-    return promises.then(findOwnersUsernames);
+    return promises.then(function(res) {
+      const files = res[0];
+      const ownersMap = res[1];
+      return findOwnersUsernames(files, ownersMap);
+    });
   });
 }
 
@@ -69,14 +73,14 @@ router.post('/', function(req, res) {
         return res.status(200).send('ok');
       }
       return getOwners(pr).then(usernames => {
-        if (usernames.indexOf(`@${pr.author}`)) {
+        if (usernames.indexOf(`@${pr.author}`) !== -1) {
           return pr.setStatus({
-            state: 'successj',
+            state: 'success',
             target_url: 'ampproject.org',
-            description: 'proper approvers met',
+            description: 'proper approval.',
             context: 'ampproject/owners-bot',
           }).then(() => {
-            res.status(200).send('ok');
+            res.status(200).send('ok.');
           });
         }
         return pr.getCommentsByAuthor(GITHUB_USERNAME).then(comments => {
@@ -105,7 +109,7 @@ function maybePostReviewerComment(res: *, pr: PullRequest, usernames: string[],
         return pr.setStatus({
           state: 'failure',
           target_url: 'ampproject.org',
-          description: 'missing proper approvers',
+          description: 'missing approval.',
           context: 'ampproject/owners-bot',
         }).then(() => {
           res.status(200).send('ok');
@@ -113,7 +117,7 @@ function maybePostReviewerComment(res: *, pr: PullRequest, usernames: string[],
       });
     }
     // No need to post a comment as the list of reviewers is the same.
-    res.status(200).send('ok');
+    res.status(200).send('ok. noop.');
     return;
   }
 
@@ -122,7 +126,7 @@ function maybePostReviewerComment(res: *, pr: PullRequest, usernames: string[],
     return pr.setStatus({
       state: 'failure',
       target_url: 'ampproject.org',
-      description: 'missing proper approvers',
+      description: 'missing approval.',
       context: 'ampproject/owners-bot',
     }).then(() => {
       res.status(200).send('ok');
