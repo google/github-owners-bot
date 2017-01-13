@@ -40,7 +40,7 @@ const qs = {
  */
 export class PullRequest {
 
-  id: string;
+  id: number;
   author: string;
   state: string;
   headRef: string;
@@ -141,13 +141,49 @@ export class PullRequest {
       json: true,
       method: 'POST',
       headers: this.getPostHeaders_(),
-      body: {'body': body},
+      body,
+    });
+  }
+
+  setApprovedStatus() {
+    return this.setStatus({
+      state: 'success',
+      target_url: 'https://www.ampproject.org',
+      description: 'approved.',
+      context: 'ampproject/owners-bot',
+    });
+  }
+
+  setFailureStatus() {
+    return this.setStatus({
+      state: 'failure',
+      target_url: 'https://www.ampproject.org',
+      description: 'missing approval.',
+      context: 'ampproject/owners-bot',
+    });
+  }
+
+  findLastApproversList(author): Promise<string[]> {
+    return this.getCommentsByAuthor(author).then(comments => {
+      comments = comments.slice(0).sort((a, b) => b.updatedAt - a.updatedAt);
+      for (let i = 0; i < comments.length; i++) {
+        const comment = comments[i];
+        // Split by line, then remove empty lines.
+        const lines = comment.body.split('\n').filter(x => !!x);
+        // Now find the line that has a /to at the beginning.
+        const approversList = lines.filter(x => /^\/to /.test(x))[0];
+        if (approversList) {
+          return approversList.replace(/^\/to /, '').split(' ');
+        }
+      }
+      return [];
     });
   }
 }
 
 export class PullRequestComment {
-  id: string;
+
+  id: number;
   type: string;
   author: string;
   body: string;
@@ -166,16 +202,28 @@ export class PullRequestComment {
   }
 }
 
-export function findLastReviewersList(
-    comments: PullRequestComment[]): ?PullRequestComment {
-  comments = comments.sort((a, b) => b.updatedAt - a.updatedAt);
-  for (let i = 0; i < comments.length; i++) {
-    const comment = comments[i];
-    const lines = comment.body.split('\n').filter(x => !!x);
-    const reviewerList = lines.filter(x => /\/to/.test(x))[0];
-    if (reviewerList) {
-      return comment;
-    }
+export class Label {
+
+  id: number;
+  url: string;
+  name: string;
+  color: string;
+  default: boolean;
+
+  constructor(json: any) {
+    this.id = json.id;
+    this.url = json.url;
+    this.name = json.name;
+    this.color = json.color;
+    this.default = json.default;
   }
-  return null;
+}
+
+export class Sender {
+
+  username: string;
+
+  constructor(json: any) {
+    this.username = json.login;
+  }
 }

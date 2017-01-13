@@ -61,14 +61,15 @@ export class Owner {
 }
 
 /**
- * Returns a list of github usernames that can be "reviewers" for the set
+ * Returns a list of github usernames that can be "approvers" for the set
  * of files. It first tries to find the interection across the files and if
  * there are none it will return the union across usernames.
  */
 export function findOwnersUsernames(files: RepoFile[],
     ownersMap: OwnersMap): string[] {
   // Find the closest OWNER file for this RepoFile
-  let owners = files.map(file => findOwners(file, ownersMap));
+  let owners = [].concat.apply(
+      [], files.map(file => findOwners(file, ownersMap)));
   // filter out duplicate OWNER instances
   owners = _.uniqBy(owners, x => x.path);
   // Get the usernames list for each OWNER instance. Currently only supports
@@ -86,16 +87,23 @@ export function findOwnersUsernames(files: RepoFile[],
  * in the repo, we simulate a folder traversal by splitting the path and
  * finding the closest OWNER file for a RepoFile.
  */
-export function findOwners(file: RepoFile, ownersMap: OwnersMap): Owner {
+export function findOwners(file: RepoFile, ownersMap: OwnersMap): Owner[] {
+  const owners = [];
   let dirname = file.dirname;
   let owner = ownersMap[dirname];
   const dirs = dirname.split(path.sep);
+  if (owner) {
+    owners.push(owner);
+  }
 
-  while (!owner && dirs.pop() && dirs.length) {
+  while (dirs.pop() && dirs.length) {
     dirname = dirs.join(path.sep);
     owner = ownersMap[dirname];
+    if (owner) {
+      owners.push(owner);
+    }
   }
-  return owner;
+  return owners;
 }
 
 export function createOwnersMap(owners: Owner[]): OwnersMap {

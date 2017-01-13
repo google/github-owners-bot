@@ -16,7 +16,7 @@ limitations under the License.
 
 # Github Owners Bot
 
-A web service that suggests reviewers for a GitHub pull request based on OWNERS
+A web service that suggests approvers for a GitHub pull request based on OWNERS
 files and enforces reviews by OWNERS as a GitHub status check.
 
 ## Deploying

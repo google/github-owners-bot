@@ -4,7 +4,7 @@
   "private": true,
   "version": "0.0.1",
   "repository": "http://github.com/ampproject/github-owners-bot",
-  "description": "A web service that suggests reviewers for a GitHub pull request based on OWNERS files and enforces reviews by OWNERS as a GitHub status check.",
+  "description": "A web service that suggests approvers for a GitHub pull request based on OWNERS files and enforces reviews by OWNERS as a GitHub status check.",
   "engines": {
     "node": "6.9.1"
   },
@@ -19,13 +19,14 @@
   "dependencies": {
     "@google/cloud-debug": "0.8.3",
     "@google/cloud-trace": "0.5.5",
+    "ava": "0.17.0",
     "bluebird": "3.4.6",
     "body-parser": "1.15.2",
     "express": "4.14.0",
     "express-session": "1.14.0",
     "express-winston": "2.0.0",
     "gcloud": "0.37.0",
-    "lodash": "4.16.4",
+    "gulp-ava": "^0.14.1",
     "nconf": "0.8.4",
     "request": "2.74.0",
     "winston": "2.2.0",

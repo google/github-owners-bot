@@ -15,24 +15,29 @@
  */
 
 import test from 'ava';
-import {findLastReviewersList, PullRequest} from '../src/github';
+import * as sinon from 'sinon';
+import {PullRequest} from '../src/github';
 
 const fs = require('fs');
-const payload = JSON.parse(fs.readFileSync('./fixtures/overlapping-comments.json'));
+const payload = JSON.parse(fs.readFileSync('./tests/fixtures/overlapping-comments.json'));
 const issuesPayload = JSON.parse(
-    fs.readFileSync('./fixtures/overlapping-comments-issues.json'));
+    fs.readFileSync('./tests/fixtures/overlapping-comments-issues.json'));
 const pullsPayload = JSON.parse(
-    fs.readFileSync('./fixtures/overlapping-comments-pulls.json'));
-const pr = new PullRequest(payload.pull_request);
+    fs.readFileSync('./tests/fixtures/overlapping-comments-pulls.json'));
 
-test('find the reviewer comment', t => {
-  t.plan(1);
-  return pr.getComments().then(comments => {
-    const list = findLastReviewersList(comments);
-    t.is(list.body.trim(), '/to @donttrustthisbot');
-  });
+let pr, sandbox;
+
+test.beforeEach(() => {
+  sandbox = sinon.sandbox.create();
+  const byType = sandbox.stub(PullRequest.prototype, 'getCommentByType_')
+  byType.withArgs('pulls').returns(Promise.resolve(pullsPayload));
+  byType.withArgs('issues').returns(Promise.resolve(issuesPayload));
+  pr = new PullRequest(payload.pull_request);
 });
 
-test('should approve if author is also owner', t => {
-  
+test('find the approvers comment', t => {
+  t.plan(1);
+  return pr.findLastApproversList('ampprojectbot').then(approvers => {
+    t.deepEqual(approvers, ['@donttrustthisbot']);
+  });
 });
