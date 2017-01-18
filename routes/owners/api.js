@@ -124,8 +124,8 @@ function maybePostApproversComment(res: *, pr: PullRequest,
       // If the bot commented and the last approvers list it posted
       // is not the same as the current one we need to post a new list
       // of approvers.
-      if (usernames.length === approvers.length &&
-          usernames.every((v, i) => v === approvers[i])) {
+      if (!(usernames.length === approvers.length &&
+          usernames.every((v, i) => v === approvers[i]))) {
         return pr.postIssuesComment(body).then(() => {
           return pr.setFailureStatus();
         });
