@@ -75,7 +75,7 @@ checkConfig('OAUTH2_CLIENT_ID');
 checkConfig('OAUTH2_CLIENT_SECRET');
 checkConfig('GITHUB_ACCESS_TOKEN');
 checkConfig('GITHUB_REPO_DIR');
-checkConfig('GITHUB_USERNAME');
+checkConfig('GITHUB_BOT_USERNAME');
 
 
 function checkConfig(setting) {
