@@ -24,7 +24,7 @@ import * as crypto from 'crypto';
 import * as express from 'express';
 const config = require('../../config');
 const GITHUB_REPO_DIR = config.get('GITHUB_REPO_DIR');
-const GITHUB_USERNAME = config.get('GITHUB_USERNAME');
+const GITHUB_BOT_USERNAME = config.get('GITHUB_BOT_USERNAME');
 const SECRET_TOKEN = config.get('SECRET_TOKEN');
 
 export const router = express.Router();
@@ -78,7 +78,7 @@ router.post('/', function(req, res) {
       // Exclude the bot name from any reviews.
       // Temporarily only turn on for @erwinmombay and @dvoytenko
       const authorWhitelist = ['erwinmombay'];
-      if (pr.author === GITHUB_USERNAME ||
+      if (pr.author === GITHUB_BOT_USERNAME ||
             authorWhitelist.indexOf(pr.author) === -1) {
         return res.status(200).send('ok');
       }
@@ -119,7 +119,7 @@ function tryPostStatus(res: *, body: *, pr: PullRequest): Promise<*> {
 function maybePostApproversComment(res: *, pr: PullRequest,
     usernames: string[]): Promise<*>|void {
   const body = composeBotComment(usernames);
-  return pr.findLastApproversList(GITHUB_USERNAME).then(approvers => {
+  return pr.findLastApproversList(GITHUB_BOT_USERNAME).then(approvers => {
     if (approvers.length) {
       // If the bot commented and the last approvers list it posted
       // is not the same as the current one we need to post a new list

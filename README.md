@@ -25,14 +25,16 @@ This web server assumes it is running on Google Compute Engine (GCE).
 A few Environment Variables need to be setup on the GCE start-up script.
 (See gce/startup-script.sh)
 
+- **REPO** The GitHub repository to clone
+- **APP_DIR** The directory to deploy the app to
+- **REPO_DIR** The directory path on the server to place the git clone
+- **GITHUB_BOT_USERNAME** The username of the bot
 - **GCLOUD_PROJECT** Google Cloud Project Id.
 - **CLOUD_BUCKET**
 - **OAUTH2_CLIENT_ID**
 - **OAUTH2_CLIENT_SECRET**
-- **GITHUB_ACCESS_TOKEN** The Authorization tokened used to make requests to
-  github.
-- **GITHUB_REPO_DIR** The directory path the clone of the repo is located.
-- **GITHUB_USERNAME** The username of the bot.
+- **GITHUB_ACCESS_TOKEN** The Authorization token used to make requests to
+  github. This can be generated in your GitHub settings.
 
 #### GITHUB_ACCESS_TOKEN
 
