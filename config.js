@@ -42,7 +42,7 @@ nconf
   // 4. Defaults
   .defaults({
     // Typically you will create a bucket with the same name as your project ID.
-    CLOUD_BUCKET: process.env.CLOUD_BUCKET,
+    CLOUD_BUCKET: process.env.CLOUD_BUCKET || 'default',
 
     // dataBackend can be 'datastore', 'cloudsql', or 'mongodb'. Be sure to
     // configure the appropriate settings for each storage engine below.
@@ -51,10 +51,10 @@ nconf
     DATA_BACKEND: 'datastore',
 
     // This is the id of your project in the Google Cloud Developers Console.
-    GCLOUD_PROJECT: process.env.GCLOUD_PROJECT,
+    GCLOUD_PROJECT: process.env.GCLOUD_PROJECT || 'default',
 
-    OAUTH2_CLIENT_ID: process.env.OAUTH2_CLIENT_ID,
-    OAUTH2_CLIENT_SECRET: process.env.OAUTH2_CLIENT_SECRET,
+    OAUTH2_CLIENT_ID: process.env.OAUTH2_CLIENT_ID || 'default',
+    OAUTH2_CLIENT_SECRET: process.env.OAUTH2_CLIENT_SECRET || 'default',
     OAUTH2_CALLBACK: 'http://localhost:8080/auth/google/callback',
 
     // Port the HTTP server
@@ -63,9 +63,9 @@ nconf
     SECRET: 'keyboardcat',
     SECRET_TOKEN: process.env.SECRET_TOKEN,
 
-    GITHUB_ACCESS_TOKEN: process.env.GITHUB_ACCESS_TOKEN,
-    GITHUB_REPO_DIR: process.env.GITHUB_REPO_DIR,
-    GITHUB_USERNAME: process.env.GITHUB_USERNAME,
+    GITHUB_ACCESS_TOKEN: process.env.GITHUB_ACCESS_TOKEN || 'default',
+    GITHUB_REPO_DIR: process.env.GITHUB_REPO_DIR || 'default',
+    GITHUB_USERNAME: process.env.GITHUB_USERNAME || 'default',
   });
 
 // Check for required settings
