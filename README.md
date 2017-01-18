@@ -34,7 +34,7 @@ A few Environment Variables need to be setup on the GCE start-up script.
 - **OAUTH2_CLIENT_ID**
 - **OAUTH2_CLIENT_SECRET**
 - **GITHUB_ACCESS_TOKEN** The Authorization token used to make requests to
-  github. This can be generated in your GitHub settings.
+  GitHub. This can be generated in your GitHub settings.
 
 #### GITHUB_ACCESS_TOKEN
 
