@@ -3,6 +3,8 @@ sudo: required  # See http://docs.travis-ci.com/user/trusty-ci-environment/
 dist: trusty
 node_js:
   - "stable"
+script:
+  - node_modules/gulp/bin/gulp.js test
 cache:
   yarn: true
   directories:

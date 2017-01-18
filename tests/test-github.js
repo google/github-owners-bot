@@ -19,11 +19,14 @@ import * as sinon from 'sinon';
 import {PullRequest} from '../src/github';
 
 const fs = require('fs');
-const payload = JSON.parse(fs.readFileSync('./tests/fixtures/overlapping-comments.json'));
+const payload = JSON.parse(fs.readFileSync(
+    './fixtures/overlapping-comments.json'));
 const issuesPayload = JSON.parse(
-    fs.readFileSync('./tests/fixtures/overlapping-comments-issues.json'));
+    fs.readFileSync(
+    './fixtures/overlapping-comments-issues.json'));
 const pullsPayload = JSON.parse(
-    fs.readFileSync('./tests/fixtures/overlapping-comments-pulls.json'));
+    fs.readFileSync(
+    './fixtures/overlapping-comments-pulls.json'));
 
 let pr, sandbox;
 
