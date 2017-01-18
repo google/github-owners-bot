@@ -163,7 +163,7 @@ export class PullRequest {
     });
   }
 
-  findLastApproversList(author): Promise<string[]> {
+  findLastApproversList(author: string): Promise<string[]> {
     return this.getCommentsByAuthor(author).then(comments => {
       comments = comments.slice(0).sort((a, b) => b.updatedAt - a.updatedAt);
       for (let i = 0; i < comments.length; i++) {

@@ -118,10 +118,8 @@ function tryPostStatus(res: *, body: *, pr: PullRequest): Promise<*> {
 
 function maybePostApproversComment(res: *, pr: PullRequest,
     usernames: string[]): Promise<*>|void {
-  // Descending sort. Newest to Oldest comments
-  const curApproversList = `/to ${usernames.join(',')}`;
-  const body = `Here is a list of approvers\n${curApproversList}`;
-  return pr.findLastApproversList().then(approvers => {
+  const body = composeBotComment(usernames);
+  return pr.findLastApproversList(GITHUB_USERNAME).then(approvers => {
     if (approvers.length) {
       // If the bot commented and the last approvers list it posted
       // is not the same as the current one we need to post a new list
@@ -141,4 +139,13 @@ function maybePostApproversComment(res: *, pr: PullRequest,
       return pr.setFailureStatus();
     });
   });
+}
+
+function composeBotComment(usernames: string[]): string {
+  const curApproversList = `/to ${usernames.join(',')}`;
+  const prefix = 'Here is a list of owners that can approve this PR:\n\n';
+  const suffix = '\n\nOwners can approve through the "APPROVED" label. ' +
+      'If the author of the PR is an owner of the files or directory, ' +
+      'the PR will be approved right away.';
+  return `${prefix}${curApproversList}${suffix}`;
 }
