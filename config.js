@@ -35,7 +35,7 @@ nconf
     'SECRET',
     'GITHUB_ACCESS_TOKEN',
     'GITHUB_REPO_DIR',
-    'GITHUB_USERNAME',
+    'GITHUB_BOT_USERNAME',
   ])
   // 3. Config file
   .file({file: path.join(__dirname, 'config.json')})
@@ -65,7 +65,7 @@ nconf
 
     GITHUB_ACCESS_TOKEN: process.env.GITHUB_ACCESS_TOKEN || 'default',
     GITHUB_REPO_DIR: process.env.GITHUB_REPO_DIR || 'default',
-    GITHUB_USERNAME: process.env.GITHUB_USERNAME || 'default',
+    GITHUB_BOT_USERNAME: process.env.GITHUB_BOT_USERNAME || 'default',
   });
 
 // Check for required settings
