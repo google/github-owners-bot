@@ -77,21 +77,6 @@ test.serial.cb('on an opened pull request, if author is also part of owner ' +
       });
 });
 
-test.serial.cb('on any review action that is not an approval, set to failed ' +
-    'status right away', t => {
-  t.plan(1);
-  const setFailureStatusSpy = sandbox.stub(
-      PullRequest.prototype, 'setFailureStatus').returns(Promise.resolve());
-
-  request(app).post('/api/get-owners')
-      .set('Content-Type', 'application/json')
-      .send(reviewSubmittedFailedPayload)
-      .end((err, res) => {
-        t.is(setFailureStatusSpy.callCount, 1, 'Should call setFailureStatus');
-        t.end();
-      });
-});
-
 test.serial.cb('on a synchronize action that is not fully approved yet, if ' +
     'the last bot comment is NOT equal to the current reviewers list, post a ' +
     'comment and set it to fail status', t => {
@@ -117,5 +102,3 @@ test.serial.cb('on a synchronize action that is not fully approved yet, if ' +
         t.end();
       });
 });
-
-test.serial.cb('on a synchronize action that is not fully approved k

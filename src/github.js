@@ -190,12 +190,14 @@ export class PullRequest {
   }
 
   setFailureStatus() {
-    return this.setStatus({
-      state: 'failure',
-      target_url: 'https://www.ampproject.org',
-      description: 'missing approval.',
-      context: 'ampproject/owners-bot',
-    });
+    // Temporary to make this non blocking
+    return this.setApprovedStatus();
+    //return this.setStatus({
+      //state: 'success',
+      //target_url: 'https://www.ampproject.org',
+      //description: 'missing approval.',
+      //context: 'ampproject/owners-bot',
+    //});
   }
 
   areAllApprovalsMet(fileOwners: FileOwners, reviews: Review[]): boolean {
@@ -249,7 +251,7 @@ export class PullRequest {
       const files = fileOwner.files.map(x => `- ${x.path.slice(2)}`).join('\n');
       const usernames = '/to ' + owner.dirOwners.map(x => `@${x}`)
           .join(' ') + '\n';
-      comment += usernames + files + '\n\n';
+      comment += usernames + files + '\n';
     });
     return comment;
   }

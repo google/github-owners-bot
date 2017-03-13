@@ -61,6 +61,19 @@ test('find top level owner for deep file with no dir owner', t => {
       './extensions/0.1/some-other-extension/some-other-extension.js');
 });
 
+test('find owner for deep level dir', t => {
+  t.plan(3);
+  var ownerFiles = findOwners([
+    new RepoFile('extensions/0.1/some-extension/some-extension.js'),
+  ], getOwnersMap());
+  const numOfOwnerFiles = Object.keys(ownerFiles).length;
+  t.is(numOfOwnerFiles, 1, 'number of found owner files should be 1');
+  const someExtensionOwnerTuple = ownerFiles['./extensions/0.1/some-extension'];
+  t.deepEqual(someExtensionOwnerTuple.owner, defaultStruct[2]);
+  t.is(someExtensionOwnerTuple.files[0].path,
+      './extensions/0.1/some-extension/some-extension.js');
+});
+
 test('find owners for deep level dir owner and top level file', t => {
   t.plan(6);
   var ownerFiles = findOwners([
