@@ -41,6 +41,12 @@ A few Environment Variables need to be setup on the GCE start-up script.
 To Generate a GITHUB_ACCESS_TOKEN see [creating an access token article](https://help.github.com/articles/creating-an-access-token-for-command-line-use/).
 Access Token will need `public_repo` and `repo:status` scopes.
 
+#### GitHub Webhook events
+
+- Pull Request
+- Pull Request Review
+- Push
+
 ## Disclaimer
 
 This is not an official Google product.

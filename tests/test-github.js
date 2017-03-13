@@ -19,18 +19,18 @@ import * as sinon from 'sinon';
 import {PullRequest} from '../src/github';
 
 const fs = require('fs');
-const payload = JSON.parse(fs.readFileSync(
-    './fixtures/overlapping-comments.json'));
-const issuesPayload = JSON.parse(
-    fs.readFileSync(
-    './fixtures/overlapping-comments-issues.json'));
-const pullsPayload = JSON.parse(
-    fs.readFileSync(
-    './fixtures/overlapping-comments-pulls.json'));
 
 let pr, sandbox;
 
 test.beforeEach(() => {
+  const payload = JSON.parse(fs.readFileSync(
+      'fixtures/overlapping-comments.json'));
+  const issuesPayload = JSON.parse(
+      fs.readFileSync(
+      'fixtures/overlapping-comments-issues.json'));
+  const pullsPayload = JSON.parse(
+      fs.readFileSync(
+      'fixtures/overlapping-comments-pulls.json'));
   sandbox = sinon.sandbox.create();
   const byType = sandbox.stub(PullRequest.prototype, 'getCommentByType_')
   byType.withArgs('pulls').returns(Promise.resolve(pullsPayload));
@@ -40,7 +40,7 @@ test.beforeEach(() => {
 
 test('find the approvers comment', t => {
   t.plan(1);
-  return pr.findLastApproversList('ampprojectbot').then(approvers => {
-    t.deepEqual(approvers, ['@donttrustthisbot']);
+  return pr.getLastApproversList('ampprojectbot').then(approvers => {
+    t.deepEqual(approvers, [['donttrustthisbot'], ['person1', 'person2']]);
   });
 });

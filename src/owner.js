@@ -17,7 +17,6 @@
 /* @flow */
 
 import * as path from 'path';
-import * as _ from 'lodash';
 import {RepoFile} from './repo-file';
 
 /**
@@ -65,21 +64,21 @@ export class Owner {
  * of files. It first tries to find the interection across the files and if
  * there are none it will return the union across usernames.
  */
-export function findOwnersUsernames(files: RepoFile[],
-    ownersMap: OwnersMap): string[] {
-  // Find the closest OWNER file for this RepoFile
-  let owners = [].concat.apply(
-      [], files.map(file => findOwners(file, ownersMap)));
-  // filter out duplicate OWNER instances
-  owners = _.uniqBy(owners, x => x.path);
-  // Get the usernames list for each OWNER instance. Currently only supports
-  // dir owners.
-  const usernames = owners.map(x => x.dirOwners);
-  const intersection = _.intersection.apply(null, usernames).sort();
-  if (intersection.length) {
-    return intersection.map(x => `@${x}`);
-  }
-  return _.union.apply(null, usernames).sort().map(x => `@${x}`);
+export function findOwners(files: RepoFile[],
+    ownersMap: OwnersMap): FileOwners {
+  const fileOwners: FileOwners = Object.create(null);
+  files.forEach((file : RepoFile) => {
+    const owner = findClosestOwnersFile(file, ownersMap);
+    if (!fileOwners[owner.dirname]) {
+      fileOwners[owner.dirname] = ({
+        owner,
+        files: [file],
+      } : FileOwner);
+    } else {
+      fileOwners[owner.dirname].files.push(file);
+    }
+  });
+  return fileOwners;
 }
 
 /**
@@ -87,23 +86,17 @@ export function findOwnersUsernames(files: RepoFile[],
  * in the repo, we simulate a folder traversal by splitting the path and
  * finding the closest OWNER file for a RepoFile.
  */
-export function findOwners(file: RepoFile, ownersMap: OwnersMap): Owner[] {
-  const owners = [];
+export function findClosestOwnersFile(file: RepoFile,
+    ownersMap: OwnersMap): Owner {
   let dirname = file.dirname;
   let owner = ownersMap[dirname];
   const dirs = dirname.split(path.sep);
-  if (owner) {
-    owners.push(owner);
-  }
 
-  while (dirs.pop() && dirs.length) {
+  while (!owner && dirs.pop() && dirs.length) {
     dirname = dirs.join(path.sep);
     owner = ownersMap[dirname];
-    if (owner) {
-      owners.push(owner);
-    }
   }
-  return owners;
+  return owner;
 }
 
 export function createOwnersMap(owners: Owner[]): OwnersMap {
