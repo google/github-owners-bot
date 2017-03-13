@@ -43,35 +43,38 @@ function ownersParser(formatReader: (str: string) => mixed[],
   return bb.all(promises).then(createOwnersMap);
 }
 
-/**
- * Retrieves all the OWNERS paths inside a repository.
- */
-export function getOwnersFilesForBranch(author: string, dirPath: string,
-    targetBranch: string): OwnersMap {
-  // NOTE: for some reason `git ls-tree --full-tree -r HEAD **/OWNERS*
-  // doesn't work from here.
-  return exec(`cd ${dirPath} && git checkout ${targetBranch} ` +
-      '&& git ls-tree --full-tree -r HEAD | ' +
-      'cut -f2 | grep OWNERS.yaml$')
-      .then(res => {
-        // Construct the owners map.
-        const ownersPaths = stdoutToArray(res)
-          // Remove unneeded string. We only want the file paths.
-          .filter(x => !/your branch is up-to-date/i.test(x));
-        return ownersParser(yamlReader, dirPath, ownersPaths, author);
-      });
+export class Git {
+
+  /**
+   * Retrieves all the OWNERS paths inside a repository.
+   */
+  getOwnersFilesForBranch(author: string, dirPath: string,
+      targetBranch: string): OwnersMap {
+    // NOTE: for some reason `git ls-tree --full-tree -r HEAD **/OWNERS*
+    // doesn't work from here.
+    return exec(`cd ${dirPath} && git checkout ${targetBranch} ` +
+        '&& git ls-tree --full-tree -r HEAD | ' +
+        'cut -f2 | grep OWNERS.yaml$')
+        .then(res => {
+          // Construct the owners map.
+          const ownersPaths = stdoutToArray(res)
+            // Remove unneeded string. We only want the file paths.
+            .filter(x => !/your branch is up-to-date/i.test(x));
+          return ownersParser(yamlReader, dirPath, ownersPaths, author);
+        });
+  }
+
+  /**
+   * cd's into an assumed git directory on the file system and does a hard
+   * reset to the remote branch.
+   */
+  pullLatestForRepo(dirPath: string, remote: string,
+      branch: string) : Promise<string[]> {
+    return exec(`cd ${dirPath} && git fetch ${remote} ${branch} && ` +
+        `git checkout -B ${branch} ${remote}/${branch}`);
+  }
 }
 
 function stdoutToArray(res: string): string[] {
   return res.split('\n').filter(x => !!x);
-}
-
-/**
- * cd's into an assumed git directory on the file system and does a hard
- * reset to the remote branch.
- */
-export function pullLatestForRepo(dirPath: string, remote: string,
-    branch: string) : Promise<string[]> {
-  return exec(`cd ${dirPath} && git fetch ${remote} ${branch} && ` +
-      `git checkout -B ${branch} ${remote}/${branch}`);
 }

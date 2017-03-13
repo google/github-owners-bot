@@ -21,16 +21,16 @@ import {PullRequest} from '../src/github';
 const fs = require('fs');
 
 let pr, sandbox;
+const payload = JSON.parse(fs.readFileSync(
+    'fixtures/overlapping-comments.json'));
+const issuesPayload = JSON.parse(
+    fs.readFileSync(
+    'fixtures/overlapping-comments-issues.json'));
+const pullsPayload = JSON.parse(
+    fs.readFileSync(
+    'fixtures/overlapping-comments-pulls.json'));
 
 test.beforeEach(() => {
-  const payload = JSON.parse(fs.readFileSync(
-      'fixtures/overlapping-comments.json'));
-  const issuesPayload = JSON.parse(
-      fs.readFileSync(
-      'fixtures/overlapping-comments-issues.json'));
-  const pullsPayload = JSON.parse(
-      fs.readFileSync(
-      'fixtures/overlapping-comments-pulls.json'));
   sandbox = sinon.sandbox.create();
   const byType = sandbox.stub(PullRequest.prototype, 'getCommentByType_')
   byType.withArgs('pulls').returns(Promise.resolve(pullsPayload));

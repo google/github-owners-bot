@@ -101,13 +101,18 @@ export class PullRequest {
   }
 
   getReviews(): Promise<Review[]> {
+    const reviewsHeaders = Object.assign({},
+        headers,
+        // Need to opt-into reviews API
+        {'Accept': 'application/vnd.github.black-cat-preview+json'});
     return request({
       url: `https://api.github.com/repos/${this.project}/${this.repo}/pulls/` +
           `${this.id}/reviews`,
       method: 'GET',
       qs,
-      headers,
+      headers: reviewsHeaders,
     }).then(function(res: any) {
+      console.log(res.body);
       const body = JSON.parse(res.body);
       // Sort by latest submitted_at date first since users and state
       // are not unique.
@@ -194,13 +199,18 @@ export class PullRequest {
   }
 
   areAllApprovalsMet(fileOwners: FileOwners, reviews: Review[]): boolean {
-    const approvedReviewers = reviews.filter(x => {
+    const reviewersWhoApproved = reviews.filter(x => {
       return x.state == 'approved';
     }).map(x => x.username);
+    // If you're the author, then you yourself are assume to approve your own
+    // PR.
+    reviewersWhoApproved.push(this.author);
+
     return Object.keys(fileOwners).every(path => {
-      const fileOwner = fileOwner[path];
+      const fileOwner = fileOwners[path];
       const owner = fileOwner.owner;
-      return _.intersection(owner.dirOwners, approvedReviewers).length > 0;
+      _.intersection(owner.dirOwners, reviewersWhoApproved);
+      return _.intersection(owner.dirOwners, reviewersWhoApproved).length > 0;
     });
   }
 
@@ -217,8 +227,6 @@ export class PullRequest {
         const lines = comment.body.split('\n').filter(x => !!x);
         // Now find the line that has a /to at the beginning.
         const approversList = lines.filter(x => /^\/to /.test(x));
-        console.log('hello world');
-        console.log(approversList);
         if (approversList.length) {
           return approversList.map(approvers => {
             return approvers.replace(/^\/to /, '').split(' ')
@@ -237,10 +245,11 @@ export class PullRequest {
     Object.keys(fileOwners).sort().forEach(key => {
       const fileOwner = fileOwners[key];
       const owner = fileOwner.owner;
-      const files = fileOwner.files.join('\n');
+      // Slice from char 2 to remove the ./ prefix normalization
+      const files = fileOwner.files.map(x => `- ${x.path.slice(2)}`).join('\n');
       const usernames = '/to ' + owner.dirOwners.map(x => `@${x}`)
           .join(' ') + '\n';
-      comment += usernames + files;
+      comment += usernames + files + '\n\n';
     });
     return comment;
   }
