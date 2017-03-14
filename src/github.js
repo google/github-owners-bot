@@ -256,9 +256,9 @@ export class PullRequest {
       const files = fileOwner.files.map(x => `- ${x.path.slice(2)}`).join('\n');
       const usernames = '/to ' + owner.dirOwners.join(' ') + '\n';
       comment += usernames + files + '\n\n';
-      comment += '\n\nFor any issues please file a bug at ' +
-          'https://github.com/google/github-owners-bot/issues';
     });
+    comment += '\n\nFor any issues please file a bug at ' +
+        'https://github.com/google/github-owners-bot/issues';
     return comment;
   }
 
