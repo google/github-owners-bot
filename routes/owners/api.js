@@ -19,7 +19,7 @@
 import * as bb from 'bluebird';
 import * as _ from 'lodash';
 import {Git} from '../../src/git';
-import {PullRequest, Review} from '../../src/github';
+import {PullRequest} from '../../src/github';
 import {findOwners} from '../../src/owner';
 import * as express from 'express';
 const config = require('../../config');
