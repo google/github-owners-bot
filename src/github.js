@@ -231,8 +231,12 @@ export class PullRequest {
         if (approversList.length) {
           return approversList.map(approvers => {
             return approvers.replace(/^\/to /, '').split(' ')
-                // Remove the @
-                .map(x => x.slice(1));
+                .map(x => {
+                  if (x.charAt(0) == '@') {
+                    return x.slice(1);
+                  }
+                  return x;
+                });
           });
         }
       }
@@ -250,8 +254,7 @@ export class PullRequest {
       const owner = fileOwner.owner;
       // Slice from char 2 to remove the ./ prefix normalization
       const files = fileOwner.files.map(x => `- ${x.path.slice(2)}`).join('\n');
-      const usernames = '/to ' + owner.dirOwners.map(x => `@${x}`)
-          .join(' ') + '\n';
+      const usernames = '/to ' + owner.dirOwners.join(' ') + '\n';
       comment += usernames + files + '\n\n';
       comment += '\n\nFor any issues please file a bug at ' +
           'https://github.com/google/github-owners-bot/issues';
