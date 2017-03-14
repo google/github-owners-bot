@@ -129,9 +129,14 @@ function maybePostComment(prInfo: PullRequestInfo): Promise<*> {
           return owner.dirOwners;
         });
 
-    // The list of the previous comment is not equal to the list
-    // that we currently see generated from the getting all owners.
-    if (!_.isEqual(reviewers, allFileOwnersUsernames)) {
+    // If the list of reviewers from the last bot's comment is different
+    // from the current evaluation of required reviewers then we need to
+    // post the new list of reviewers. (this might be more than the number
+    // of previously required reviewers or less, but in any case we need to
+    // post the list again)
+    if (reviewers.length != allFileOwnersUsernames.length ||
+        _.intersection(reviewers, allFileOwnersUsernames).length !=
+            reviewers.length) {
       return pr.postIssuesComment(pr.composeBotComment(fileOwners))
           .then(() => {
             return pr.setFailureStatus();

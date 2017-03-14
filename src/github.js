@@ -234,7 +234,7 @@ export class PullRequest {
                     return x.slice(1);
                   }
                   return x;
-                });
+                }).sort();
           });
         }
       }
