@@ -112,7 +112,6 @@ export class PullRequest {
       qs,
       headers: reviewsHeaders,
     }).then(function(res: any) {
-      console.log(res.body);
       const body = JSON.parse(res.body);
       // Sort by latest submitted_at date first since users and state
       // are not unique.
@@ -244,7 +243,7 @@ export class PullRequest {
   composeBotComment(fileOwners: FileOwners) {
     let comment = 'Hi, ampproject bot here! Here are a list of the owners ' +
         'that can approve your files.\n\nYou may leave an issue comment ' +
-        `stating "${GITHUB_BOT_USERNAME} retry!" to force me to re-evaluate ` +
+        `stating "@${GITHUB_BOT_USERNAME} retry!" to force me to re-evaluate ` +
         'this Pull Request\'s status\n\n';
     Object.keys(fileOwners).sort().forEach(key => {
       const fileOwner = fileOwners[key];
@@ -254,8 +253,20 @@ export class PullRequest {
       const usernames = '/to ' + owner.dirOwners.map(x => `@${x}`)
           .join(' ') + '\n';
       comment += usernames + files + '\n\n';
+      comment += '\n\nFor any issues please file a bug at ' +
+          'https://github.com/google/github-owners-bot/issues';
     });
     return comment;
+  }
+
+  static fetch(url) {
+    return request({
+      url,
+      method: 'GET', qs, headers,
+    }).then(res => {
+      const body = JSON.parse(res.body);
+      return new PullRequest(body);
+    });
   }
 }
 
