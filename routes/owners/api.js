@@ -89,8 +89,14 @@ export function index(req: Object, res: Object) {
     return body && body.pull_request && prActionTypes.indexOf(body.action) > -1;
   }
 
+  function isRetryCommand(body) {
+    return body && body.issue && body.comment && body.action == 'created' &&
+        body.comment.body.trim().toLowerCase() ==
+            `@${GITHUB_BOT_USERNAME} retry!`;
+  }
+
   const body = req.body;
-  if (isPrAction(body) || isReviewAction(body)) {
+  if (isPrAction(body) || isReviewAction(body) || isRetryCommand(body)) {
     const pr = new PullRequest(body.pull_request);
 
     // Exclude the bot name from any reviews. This is basically a no-op.

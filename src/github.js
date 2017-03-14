@@ -243,7 +243,9 @@ export class PullRequest {
 
   composeBotComment(fileOwners: FileOwners) {
     let comment = 'Hi, ampproject bot here! Here are a list of the owners ' +
-        'that can approve your files.\n\n';
+        'that can approve your files.\n\nYou may leave an issue comment ' +
+        `stating "${GITHUB_BOT_USERNAME} retry!" to force me to re-evaluate ` +
+        'this Pull Request\'s status\n\n';
     Object.keys(fileOwners).sort().forEach(key => {
       const fileOwner = fileOwners[key];
       const owner = fileOwner.owner;
