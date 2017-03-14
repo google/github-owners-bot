@@ -43,6 +43,7 @@ Access Token will need `public_repo` and `repo:status` scopes.
 
 #### GitHub Webhook events
 
+- Issue Comment
 - Pull Request
 - Pull Request Review
 - Push

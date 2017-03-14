@@ -42,3 +42,10 @@ type GitHubStatusPost = {
   description: string,
   context: string
 }
+
+type PullRequestInfo = {
+  pr: PullRequest,
+  fileOwners: FileOwners,
+  reviews: Review[],
+  approvalsMet: boolean
+}

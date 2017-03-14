@@ -89,7 +89,15 @@ export function index(req: Object, res: Object) {
     return body && body.pull_request && prActionTypes.indexOf(body.action) > -1;
   }
 
+  function isRetryCommand(body) {
+    return body && body.issue && body.comment && body.action == 'created' &&
+        body.comment.user.login !== GITHUB_BOT_USERNAME &&
+        body.issue.pull_request && body.comment.body.toLowerCase().indexOf(
+            `@${GITHUB_BOT_USERNAME} retry`) > -1;
+  }
+
   const body = req.body;
+  let promise = Promise.resolve();
   if (isPrAction(body) || isReviewAction(body)) {
     const pr = new PullRequest(body.pull_request);
 
@@ -98,61 +106,74 @@ export function index(req: Object, res: Object) {
       return ok();
     }
 
-    // Newly created
-    if (body.action == 'opened') {
-      return getOwners(pr).then(fileOwners => {
-        return pr.getUniqueReviews().then(reviews => {
-          const approvalsMet = pr.areAllApprovalsMet(fileOwners, reviews);
-          if (approvalsMet) {
-            return pr.setApprovedStatus().then(ok);
-          }
-          return pr.postIssuesComment(pr.composeBotComment(fileOwners))
-              .then(() => {
-                return pr.setFailureStatus().then(ok);
-              });
-        });
-      });
-    }
-
-    return tryPostStatusOrComment(res, body, pr).then(ok);
+    promise = processPullRequest(body, pr);
+  } else if (isRetryCommand(body)) {
+    promise = PullRequest.fetch(body.issue.pull_request.url)
+        .then(processPullRequest.bind(null, body));
   }
-  // No-op
-  return ok();
+
+  return promise.then(ok).catch(() => {
+    res.status(500).send('Something went wrong!');
+  });
 }
 
-function tryPostStatusOrComment(res: *, body: *, pr: PullRequest): Promise<*> {
+function maybePostComment(prInfo: PullRequestInfo): Promise<*> {
+  const {pr, fileOwners} = prInfo;
+  // If all approvals are still not met, do we need to submit a new post?
+  return pr.getLastApproversList(GITHUB_BOT_USERNAME).then(reviewers => {
+
+    const allFileOwnersUsernames = Object.keys(fileOwners).sort()
+        .map(key => {
+          const fileOwner = fileOwners[key];
+          const owner = fileOwner.owner;
+          return owner.dirOwners;
+        });
+
+    // The list of the previous comment is not equal to the list
+    // that we currently see generated from the getting all owners.
+    if (!_.isEqual(reviewers, allFileOwnersUsernames)) {
+      return pr.postIssuesComment(pr.composeBotComment(fileOwners))
+          .then(() => {
+            return pr.setFailureStatus();
+          });
+    }
+    return pr.setFailureStatus();
+  });
+}
+
+function getPullRequestInfo(pr: PullRequest): Promise<PullRequestInfo> {
   return getOwners(pr).then(fileOwners => {
     return pr.getUniqueReviews().then(reviews => {
       const approvalsMet = pr.areAllApprovalsMet(fileOwners, reviews);
-
-      if (approvalsMet) {
-        return pr.setApprovedStatus();
-      }
-
-      // If all approvals are still not met, do we need to submit a new post?
-      return pr.getLastApproversList(GITHUB_BOT_USERNAME).then(reviewers => {
-
-        const allFileOwnersUsernames = Object.keys(fileOwners).sort()
-            .map(key => {
-              const fileOwner = fileOwners[key];
-              const owner = fileOwner.owner;
-              return owner.dirOwners;
-            });
-
-        // The list of the previous comment is not equal to the list
-        // that we currently see generated from the getting all owners.
-        if (!_.isEqual(reviewers, allFileOwnersUsernames)) {
-          return pr.postIssuesComment(pr.composeBotComment(fileOwners))
-              .then(() => {
-                return pr.setFailureStatus();
-              });
-        }
-        return pr.setFailureStatus();
-      });
-
-
+      return {pr, fileOwners, reviews, approvalsMet};
     });
-  }).catch(() => {
-    res.status(500).send('E2: Something went wrong.');
   });
+}
+
+function processPullRequest(body: Object,
+    pr: PullRequest): Promise<*> {
+  return getPullRequestInfo(pr).then(prInfo => {
+    const {approvalsMet} = prInfo;
+    // Newly created
+    if (body.action == 'opened') {
+      return openedAction(prInfo);
+    }
+
+    if (approvalsMet) {
+      return pr.setApprovedStatus();
+    }
+
+    return maybePostComment(prInfo);
+  });
+}
+
+function openedAction(prInfo: PullRequestInfo): Promise<*> {
+  const {pr, fileOwners, approvalsMet} = prInfo;
+  if (approvalsMet) {
+    return prInfo.pr.setApprovedStatus();
+  }
+  return pr.postIssuesComment(pr.composeBotComment(fileOwners))
+    .then(() => {
+      return pr.setFailureStatus();
+    });
 }

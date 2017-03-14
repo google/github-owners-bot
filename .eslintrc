@@ -31,7 +31,8 @@
     "OwnersMap": false,
     "GitHubStatusPost": false,
     "FileOwner": false,
-    "FileOwners": false
+    "FileOwners": false,
+    "PullRequestInfo": false
   },
   "rules": {
     "array-bracket-spacing": [2, "never"],
