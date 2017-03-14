@@ -183,20 +183,18 @@ export class PullRequest {
     return this.setStatus({
       state: 'success',
       target_url: 'https://www.ampproject.org',
-      description: 'approved.',
+      description: 'full approvals met.',
       context: 'ampproject/owners-bot',
     });
   }
 
   setFailureStatus() {
-    // Temporary to make this non blocking
-    return this.setApprovedStatus();
-    //return this.setStatus({
-      //state: 'success',
-      //target_url: 'https://www.ampproject.org',
-      //description: 'missing approval.',
-      //context: 'ampproject/owners-bot',
-    //});
+    return this.setStatus({
+      state: 'success',
+      target_url: 'https://www.ampproject.org',
+      description: 'missing full approvals.',
+      context: 'ampproject/owners-bot',
+    });
   }
 
   areAllApprovalsMet(fileOwners: FileOwners, reviews: Review[]): boolean {
