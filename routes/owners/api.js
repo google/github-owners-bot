@@ -91,8 +91,9 @@ export function index(req: Object, res: Object) {
 
   function isRetryCommand(body) {
     return body && body.issue && body.comment && body.action == 'created' &&
-        body.issue.pull_request && body.comment.body.trim().toLowerCase() ==
-            `@${GITHUB_BOT_USERNAME} retry!`;
+        body.comment.user.login !== GITHUB_BOT_USERNAME &&
+        body.issue.pull_request && body.comment.body.toLowerCase().indexOf(
+            `@${GITHUB_BOT_USERNAME} retry`) > -1;
   }
 
   const body = req.body;

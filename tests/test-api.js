@@ -2,9 +2,12 @@ import test from 'ava';
 import * as sinon from 'sinon';
 import {PullRequest, Review} from '../src/github';
 const request = require('supertest');
+const config = require('../config');
 const fs = require('fs');
 
 import {app} from '../app';
+
+const GITHUB_BOT_USERNAME = config.get('GITHUB_BOT_USERNAME');
 
 // Figure out how to get this to work on travis since we need to have
 // the target repo
@@ -134,6 +137,38 @@ test.serial.cb('on a comment issue where the retry command is invoked and ' +
       .end((err, res) => {
         t.is(postCommentSpy.callCount, 0, 'Should call postIssuesComment');
         t.is(setApprovalStatusSpy.callCount, 1,
+            'Should call setApprovalStatusSpy');
+        t.end();
+      });
+});
+
+test.serial.cb('on a comment issue where the retry command is invoked and ' +
+    'approvals are met but actually the bot, should be a no op', t => {
+  const retryPayload = JSON.parse(
+      fs.readFileSync(
+      'fixtures/retry_comment.json'));
+  const postCommentSpy =
+    sandbox.stub(PullRequest.prototype, 'postIssuesComment')
+        .returns(Promise.resolve());
+  const setApprovalStatusSpy = sandbox.stub(
+      PullRequest.prototype, 'setApprovedStatus').returns(Promise.resolve());
+  const reviewsSuccess = JSON.parse(
+      fs.readFileSync(
+      'fixtures/reviews_approved.json'));
+  const reviews = reviewsSuccess.map(x => new Review(x)).sort((a, b) => {
+    return b.submitted_at - a.submitted_at;
+  });
+  sandbox.stub(PullRequest.prototype, 'getReviews')
+      .returns(Promise.resolve(reviews));
+
+  retryPayload.comment.user.login = GITHUB_BOT_USERNAME;
+
+  request(app).post('/api/get-owners')
+      .set('Content-Type', 'application/json')
+      .send(retryPayload)
+      .end((err, res) => {
+        t.is(postCommentSpy.callCount, 0, 'Should call postIssuesComment');
+        t.is(setApprovalStatusSpy.callCount, 0,
             'Should call setApprovalStatusSpy');
         t.end();
       });
