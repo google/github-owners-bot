@@ -35,7 +35,7 @@ gulp.task('babel', () => {
 });
 
 gulp.task('test', () => {
-  return gulp.src(tests).pipe(ava({verbose: true}));
+  return gulp.src(tests).pipe(ava({verbose: true, timeout: '10s'}));
 });
 
 gulp.task('flow', () => {

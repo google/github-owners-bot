@@ -27,13 +27,18 @@ type OwnersMap = {
   [key: string]: Owner
 }
 
+type FileOwner = {
+  owner: Owner,
+  files: RepoFile[]
+}
+
+type FileOwners = {
+  [key: string]: FileOwner
+}
+
 type GitHubStatusPost = {
-  state: "success" | "error" | "failure",
+  state: 'success' | 'error' | 'failure',
   target_url: string,
   description: string,
   context: string
 }
-
-interface PullRequestJson {
-}
-

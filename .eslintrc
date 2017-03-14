@@ -29,7 +29,9 @@
     "global": false,
     "describes": true,
     "OwnersMap": false,
-    "GitHubStatusPost": false
+    "GitHubStatusPost": false,
+    "FileOwner": false,
+    "FileOwners": false
   },
   "rules": {
     "array-bracket-spacing": [2, "never"],
