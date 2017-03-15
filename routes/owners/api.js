@@ -134,9 +134,7 @@ function maybePostComment(prInfo: PullRequestInfo): Promise<*> {
     // post the new list of reviewers. (this might be more than the number
     // of previously required reviewers or less, but in any case we need to
     // post the list again)
-    if (reviewers.length != allFileOwnersUsernames.length ||
-        _.intersection(reviewers, allFileOwnersUsernames).length !=
-            reviewers.length) {
+    if (!_.isEqual(reviewers, allFileOwnersUsernames)) {
       return pr.postIssuesComment(pr.composeBotComment(fileOwners))
           .then(() => {
             return pr.setFailureStatus();
