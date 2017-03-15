@@ -56,6 +56,7 @@ export class Owner {
         // TODO(erwin): support file level entries. Finalize spec for it.
       }
     });
+    this.dirOwners.sort();
   }
 }
 

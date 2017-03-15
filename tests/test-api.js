@@ -135,7 +135,7 @@ test.serial.cb('on a comment issue where the retry command is invoked and ' +
       .set('Content-Type', 'application/json')
       .send(retryPayload)
       .end((err, res) => {
-        t.is(postCommentSpy.callCount, 0, 'Should call postIssuesComment');
+        t.is(postCommentSpy.callCount, 0, 'Should not call postIssuesComment');
         t.is(setApprovalStatusSpy.callCount, 1,
             'Should call setApprovalStatusSpy');
         t.end();
@@ -167,9 +167,81 @@ test.serial.cb('on a comment issue where the retry command is invoked and ' +
       .set('Content-Type', 'application/json')
       .send(retryPayload)
       .end((err, res) => {
-        t.is(postCommentSpy.callCount, 0, 'Should call postIssuesComment');
+        t.is(postCommentSpy.callCount, 0, 'Should not call postIssuesComment');
         t.is(setApprovalStatusSpy.callCount, 0,
-            'Should call setApprovalStatusSpy');
+            'Should not call setApprovalStatusSpy');
+        t.end();
+      });
+});
+
+test.serial.cb('it should not post a new comment if the old reviewers list ' +
+    'is equal to the new reviewers list', t => {
+  sandbox.stub(PullRequest.prototype, 'getLastApproversList')
+      .returns(Promise.resolve([['donttrustthisbot']]));
+
+  const syncPayload = JSON.parse(
+      fs.readFileSync(
+      'fixtures/sync.json'));
+  const issuesPayload = JSON.parse(
+      fs.readFileSync(
+      'fixtures/overlapping-comments-issues.json'));
+  const pullsPayload = JSON.parse(
+      fs.readFileSync(
+      'fixtures/overlapping-comments-pulls.json'));
+
+  const byType = sandbox.stub(PullRequest.prototype, 'getCommentByType_')
+  byType.withArgs('pulls').returns(Promise.resolve(pullsPayload));
+  byType.withArgs('issues').returns(Promise.resolve(issuesPayload));
+
+  const postCommentSpy =
+    sandbox.stub(PullRequest.prototype, 'postIssuesComment')
+        .returns(Promise.resolve());
+  const setFailureStatusSpy = sandbox.stub(
+      PullRequest.prototype, 'setFailureStatus').returns(Promise.resolve());
+
+  request(app).post('/api/get-owners')
+      .set('Content-Type', 'application/json')
+      .send(syncPayload)
+      .end((err, res) => {
+        t.is(postCommentSpy.callCount, 0, 'Should not call postIssuesComment');
+        t.is(setFailureStatusSpy.callCount, 1,
+            'Should call setFailureStatusSpy');
+        t.end();
+      });
+});
+
+test.serial.cb('it should post a new comment if the old reviewers list is ' +
+    'not equal to the new reviewers list', t => {
+  sandbox.stub(PullRequest.prototype, 'getLastApproversList')
+      .returns(Promise.resolve([['a', 'b']]));
+
+  const syncPayload = JSON.parse(
+      fs.readFileSync(
+      'fixtures/sync.json'));
+  const issuesPayload = JSON.parse(
+      fs.readFileSync(
+      'fixtures/overlapping-comments-issues.json'));
+  const pullsPayload = JSON.parse(
+      fs.readFileSync(
+      'fixtures/overlapping-comments-pulls.json'));
+
+  const byType = sandbox.stub(PullRequest.prototype, 'getCommentByType_')
+  byType.withArgs('pulls').returns(Promise.resolve(pullsPayload));
+  byType.withArgs('issues').returns(Promise.resolve(issuesPayload));
+
+  const postCommentSpy =
+    sandbox.stub(PullRequest.prototype, 'postIssuesComment')
+        .returns(Promise.resolve());
+  const setFailureStatusSpy = sandbox.stub(
+      PullRequest.prototype, 'setFailureStatus').returns(Promise.resolve());
+
+  request(app).post('/api/get-owners')
+      .set('Content-Type', 'application/json')
+      .send(syncPayload)
+      .end((err, res) => {
+        t.is(postCommentSpy.callCount, 1, 'Should call postIssuesComment');
+        t.is(setFailureStatusSpy.callCount, 1,
+            'Should call setFailureStatusSpy');
         t.end();
       });
 });
