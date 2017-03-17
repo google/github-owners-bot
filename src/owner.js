@@ -36,27 +36,20 @@ export class Owner {
   dirOwners: string[];
   fileOwners: Object;
 
-  constructor(config: any, pathToRepoDir: string, filePath: string) {
+  constructor(dirOwners: string[], pathToRepoDir: string, filePath: string) {
     // We want it have the leading ./ to evaluate `.` later on
     this.path = /^\./.test(filePath) ? filePath : `.${path.sep}${filePath}`;
     this.dirname = path.dirname(this.path);
     this.fullpath = path.join(pathToRepoDir, this.path);
-    this.score = (this.dirname.match(/\//g) || []).length;
 
-    this.dirOwners = [];
-    this.fileOwners = Object.create(null);
-    this.parseConfig_(config);
+    this.dirOwners = dirOwners.sort();
   }
+}
 
-  parseConfig_(config: any) {
-    config.forEach(entry => {
-      if (typeof entry === 'string') {
-        this.dirOwners.push(entry);
-      } else if (entry && entry['file-only']) {
-        // TODO(erwin): support file level entries. Finalize spec for it.
-      }
-    });
-    this.dirOwners.sort();
+export class FileLevelOwner {
+
+  constructor(filePath: string, fullpath: string) {
+    this.path = /^\./.test(filePath) ? filePath : `.${path.sep}${filePath}`;
   }
 }
 

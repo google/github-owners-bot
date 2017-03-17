@@ -213,7 +213,7 @@ export class PullRequest {
     });
   }
 
-  isBotAuthor() {
+  isBotAuthor(): boolean {
     return this.author == GITHUB_BOT_USERNAME;
   }
 
