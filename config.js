@@ -63,6 +63,7 @@ nconf
     SECRET: 'keyboardcat',
     SECRET_TOKEN: process.env.SECRET_TOKEN,
 
+    NODE_ENV: process.env.NODE_ENV || 'development',
     GITHUB_ACCESS_TOKEN: process.env.GITHUB_ACCESS_TOKEN || 'default',
     GITHUB_REPO_DIR: process.env.GITHUB_REPO_DIR || 'default',
     GITHUB_BOT_USERNAME: process.env.GITHUB_BOT_USERNAME || 'default',

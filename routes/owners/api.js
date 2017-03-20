@@ -16,11 +16,11 @@
 
 /* @flow */
 
-import * as bb from 'bluebird';
 import * as _ from 'lodash';
 import {Git} from '../../src/git';
 import {PullRequest} from '../../src/github';
-import {findOwners} from '../../src/owner';
+import {createOwnersMap} from '../../src/owner';
+import {RepoFile} from '../../src/repo-file';
 import * as express from 'express';
 const config = require('../../config');
 const GITHUB_BOT_USERNAME = config.get('GITHUB_BOT_USERNAME');
@@ -41,17 +41,10 @@ const prActionTypes: string[] = [
   'synchronize',
 ];
 
-function getOwners(pr: PullRequest) : Promise<FileOwners> {
+function getOwners(pr: PullRequest) : Promise<RepoFile[]> {
   return git.pullLatestForRepo(GITHUB_REPO_DIR, 'origin', 'master').then(() => {
-    const promises = bb.all([
-      pr.getFiles(),
-      git.getOwnersFilesForBranch(pr.author, GITHUB_REPO_DIR, 'master'),
-    ]);
-    return promises.then(function(res) {
-      const files = res[0];
-      const ownersMap = res[1];
-      return findOwners(files, ownersMap);
-    });
+    return git.getOwnersFilesForBranch(pr.author, GITHUB_REPO_DIR, 'master')
+        .then(ownersMap => pr.getFiles(ownersMap));
   });
 }
 
@@ -112,19 +105,37 @@ export function index(req: Object, res: Object) {
         .then(processPullRequest.bind(null, body));
   }
 
-  return promise.then(ok).catch(() => {
-    res.status(500).send('Something went wrong!');
+  return promise.then(ok).catch(e => {
+    if (process.env.NODE_ENV == 'production') {
+      res.status(500).send('Something went wrong!');
+    } else {
+      res.status(500).send(e.stack);
+    }
   });
 }
 
 function maybePostComment(prInfo: PullRequestInfo): Promise<*> {
-  const {pr, fileOwners} = prInfo;
+  const {pr, repoFiles} = prInfo;
   // If all approvals are still not met, do we need to submit a new post?
   return pr.getLastApproversList(GITHUB_BOT_USERNAME).then(reviewers => {
 
-    const allFileOwnersUsernames = Object.keys(fileOwners).sort()
+
+    const aggregatedOwners = Object.create(null);
+
+    repoFiles.forEach(repoFile => {
+      const id = repoFile.findRepoFileOwner().id;
+      if (!aggregatedOwners[id]) {
+        aggregatedOwners[id] = {
+          owner: repoFile.dirOwner,
+          files: [repoFile],
+        };
+      } else {
+        aggregatedOwners[id].files.push(repoFile);
+      }
+    });
+    const allFileOwnersUsernames = Object.keys(aggregatedOwners).sort()
         .map(key => {
-          const fileOwner = fileOwners[key];
+          const fileOwner = aggregatedOwners[key];
           const owner = fileOwner.owner;
           return owner.dirOwners;
         });
@@ -135,7 +146,7 @@ function maybePostComment(prInfo: PullRequestInfo): Promise<*> {
     // of previously required reviewers or less, but in any case we need to
     // post the list again)
     if (!_.isEqual(reviewers, allFileOwnersUsernames)) {
-      return pr.postIssuesComment(pr.composeBotComment(fileOwners))
+      return pr.postIssuesComment(pr.composeBotComment(repoFiles))
           .then(() => {
             return pr.setFailureStatus();
           });
@@ -145,10 +156,10 @@ function maybePostComment(prInfo: PullRequestInfo): Promise<*> {
 }
 
 function getPullRequestInfo(pr: PullRequest): Promise<PullRequestInfo> {
-  return getOwners(pr).then(fileOwners => {
+  return getOwners(pr).then(repoFiles => {
     return pr.getUniqueReviews().then(reviews => {
-      const approvalsMet = pr.areAllApprovalsMet(fileOwners, reviews);
-      return {pr, fileOwners, reviews, approvalsMet};
+      const approvalsMet = pr.areAllApprovalsMet(repoFiles, reviews);
+      return {pr, repoFiles, reviews, approvalsMet};
     });
   });
 }
@@ -171,11 +182,11 @@ function processPullRequest(body: Object,
 }
 
 function openedAction(prInfo: PullRequestInfo): Promise<*> {
-  const {pr, fileOwners, approvalsMet} = prInfo;
+  const {pr, repoFiles, approvalsMet} = prInfo;
   if (approvalsMet) {
     return prInfo.pr.setApprovedStatus();
   }
-  return pr.postIssuesComment(pr.composeBotComment(fileOwners))
+  return pr.postIssuesComment(pr.composeBotComment(repoFiles))
     .then(() => {
       return pr.setFailureStatus();
     });

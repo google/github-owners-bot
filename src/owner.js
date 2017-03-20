@@ -17,7 +17,6 @@
 /* @flow */
 
 import * as path from 'path';
-import {RepoFile} from './repo-file';
 
 /**
  * @fileoverview Contains classes and functions in relation to "OWNER" files
@@ -58,46 +57,6 @@ export class Owner {
     });
     this.dirOwners.sort();
   }
-}
-
-/**
- * Returns a list of github usernames that can be "approvers" for the set
- * of files. It first tries to find the interection across the files and if
- * there are none it will return the union across usernames.
- */
-export function findOwners(files: RepoFile[],
-    ownersMap: OwnersMap): FileOwners {
-  const fileOwners: FileOwners = Object.create(null);
-  files.forEach((file : RepoFile) => {
-    const owner = findClosestOwnersFile(file, ownersMap);
-    if (!fileOwners[owner.dirname]) {
-      fileOwners[owner.dirname] = ({
-        owner,
-        files: [file],
-      } : FileOwner);
-    } else {
-      fileOwners[owner.dirname].files.push(file);
-    }
-  });
-  return fileOwners;
-}
-
-/**
- * Using the `ownersMap` key which is the path to the actual OWNER file
- * in the repo, we simulate a folder traversal by splitting the path and
- * finding the closest OWNER file for a RepoFile.
- */
-export function findClosestOwnersFile(file: RepoFile,
-    ownersMap: OwnersMap): Owner {
-  let dirname = file.dirname;
-  let owner = ownersMap[dirname];
-  const dirs = dirname.split(path.sep);
-
-  while (!owner && dirs.pop() && dirs.length) {
-    dirname = dirs.join(path.sep);
-    owner = ownersMap[dirname];
-  }
-  return owner;
 }
 
 export function createOwnersMap(owners: Owner[]): OwnersMap {

@@ -15,7 +15,7 @@
  */
 
 /* @flow */
-
+import {Owner} from './owner';
 import * as path from 'path';
 
 /**
@@ -23,13 +23,38 @@ import * as path from 'path';
  * This is hydrated from the github pull request api.
  */
 export class RepoFile {
+
   path: string;
   dirname: string;
+  ownersMap: OwnersMap;
+  dirOwner: Owner;
 
-  constructor(filePath: string) {
+  constructor(filePath: string, ownersMap: OwnersMap) {
     // We want it have the leading ./ to evaluate `.` later on
-    /** @type {string} */
     this.path = /^\./.test(filePath) ? filePath : `.${path.sep}${filePath}`;
     this.dirname = path.dirname(this.path);
+    this.ownersMap = ownersMap;
+
+    this.dirOwner = this.findOwnerFile_();
+  }
+
+  findOwnerFile_(): Owner {
+    let dirname = this.dirname;
+    let owner = this.ownersMap[dirname];
+    const dirs = dirname.split(path.sep);
+
+    while (!owner && dirs.pop() && dirs.length) {
+      dirname = dirs.join(path.sep);
+      owner = this.ownersMap[dirname];
+    }
+    return owner;
+  }
+
+  findRepoFileOwner(): RepoFileOwner {
+    return {
+      id: this.dirOwner.path,
+      type: 'dir',
+      usernames: this.dirOwner.dirOwners,
+    };
   }
 }
