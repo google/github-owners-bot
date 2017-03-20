@@ -38,7 +38,8 @@ type PullRequestInfo = {
   pr: PullRequest,
   repoFiles:RepoFile[],
   reviews: Review[],
-  approvalsMet: boolean
+  approvalsMet: boolean,
+  ownerTuples: OwnerTuples
 }
 
 type RepoFileOwner = {
@@ -46,3 +47,10 @@ type RepoFileOwner = {
   type: 'file' | 'dir',
   usernames: string[]
 }
+
+type OwnerTuple = {
+  owner: Owner,
+  files: RepoFile[]
+}
+
+type OwnerTuples = OwnerTuple[];

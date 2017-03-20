@@ -98,7 +98,7 @@ test.serial('on a synchronize action that is not fully approved yet, if ' +
       PullRequest.prototype, 'setFailureStatus').returns(Promise.resolve());
   const lastApproversListStub = sandbox
       .stub(PullRequest.prototype, 'getLastApproversList')
-      .returns(Promise.resolve([]));
+      .returns(Promise.resolve(['erwin-test']));
 
   return request(app).post('/api/get-owners')
       .set('Content-Type', 'application/json')

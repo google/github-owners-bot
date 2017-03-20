@@ -17,6 +17,7 @@
 /* @flow */
 
 import * as path from 'path';
+import {RepoFile} from './repo-file';
 
 /**
  * @fileoverview Contains classes and functions in relation to "OWNER" files
@@ -66,4 +67,24 @@ export function createOwnersMap(owners: Owner[]): OwnersMap {
     }
     return ownersMap;
   }, Object.create(null));
+}
+
+export function createAggregatedOwnersTuple(
+    repoFiles: RepoFile[]): OwnerTuples {
+  const aggregatedOwners = Object.create(null);
+
+  repoFiles.forEach(repoFile => {
+    const id = repoFile.findRepoFileOwner().id;
+    if (!aggregatedOwners[id]) {
+      aggregatedOwners[id] = {
+        owner: repoFile.dirOwner,
+        files: [repoFile],
+      };
+    } else {
+      aggregatedOwners[id].files.push(repoFile);
+    }
+  });
+  return Object.keys(aggregatedOwners).sort().map(key => {
+    return aggregatedOwners[key];
+  });;
 }

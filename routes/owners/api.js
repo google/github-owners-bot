@@ -19,7 +19,7 @@
 import * as _ from 'lodash';
 import {Git} from '../../src/git';
 import {PullRequest} from '../../src/github';
-import {createOwnersMap} from '../../src/owner';
+import {createAggregatedOwnersTuple} from '../../src/owner';
 import {RepoFile} from '../../src/repo-file';
 import * as express from 'express';
 const config = require('../../config');
@@ -115,30 +115,14 @@ export function index(req: Object, res: Object) {
 }
 
 function maybePostComment(prInfo: PullRequestInfo): Promise<*> {
-  const {pr, repoFiles} = prInfo;
+  const {pr, repoFiles, ownerTuples} = prInfo;
   // If all approvals are still not met, do we need to submit a new post?
   return pr.getLastApproversList(GITHUB_BOT_USERNAME).then(reviewers => {
 
-
-    const aggregatedOwners = Object.create(null);
-
-    repoFiles.forEach(repoFile => {
-      const id = repoFile.findRepoFileOwner().id;
-      if (!aggregatedOwners[id]) {
-        aggregatedOwners[id] = {
-          owner: repoFile.dirOwner,
-          files: [repoFile],
-        };
-      } else {
-        aggregatedOwners[id].files.push(repoFile);
-      }
+    const allFileOwnersUsernames = ownerTuples.map(fileOwner => {
+      return fileOwner.owner.dirOwners;
     });
-    const allFileOwnersUsernames = Object.keys(aggregatedOwners).sort()
-        .map(key => {
-          const fileOwner = aggregatedOwners[key];
-          const owner = fileOwner.owner;
-          return owner.dirOwners;
-        });
+    console.log(reviewers, allFileOwnersUsernames);
 
     // If the list of reviewers from the last bot's comment is different
     // from the current evaluation of required reviewers then we need to
@@ -159,7 +143,8 @@ function getPullRequestInfo(pr: PullRequest): Promise<PullRequestInfo> {
   return getOwners(pr).then(repoFiles => {
     return pr.getUniqueReviews().then(reviews => {
       const approvalsMet = pr.areAllApprovalsMet(repoFiles, reviews);
-      return {pr, repoFiles, reviews, approvalsMet};
+      const ownerTuples = createAggregatedOwnersTuple(repoFiles);
+      return {pr, repoFiles, reviews, approvalsMet, ownerTuples};
     });
   });
 }
@@ -182,11 +167,11 @@ function processPullRequest(body: Object,
 }
 
 function openedAction(prInfo: PullRequestInfo): Promise<*> {
-  const {pr, repoFiles, approvalsMet} = prInfo;
+  const {pr, approvalsMet, ownerTuples} = prInfo;
   if (approvalsMet) {
     return prInfo.pr.setApprovedStatus();
   }
-  return pr.postIssuesComment(pr.composeBotComment(repoFiles))
+  return pr.postIssuesComment(pr.composeBotComment(ownerTuples))
     .then(() => {
       return pr.setFailureStatus();
     });

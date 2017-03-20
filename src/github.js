@@ -244,27 +244,12 @@ export class PullRequest {
     });
   }
 
-  composeBotComment(repoFiles: RepoFile[]): string {
+  composeBotComment(aggregatedOwners: OwnerTuples): string {
     let comment = 'Hi, ampproject bot here! Here are a list of the owners ' +
         'that can approve your files.\n\nYou may leave an issue comment ' +
         `stating "@${GITHUB_BOT_USERNAME} retry!" to force me to re-evaluate ` +
         'this Pull Request\'s status\n\n';
-    const aggregatedOwners = Object.create(null);
-
-    repoFiles.forEach(repoFile => {
-      const id = repoFile.findRepoFileOwner().id;
-      if (!aggregatedOwners[id]) {
-        aggregatedOwners[id] = {
-          owner: repoFile.dirOwner,
-          files: [repoFile],
-        };
-      } else {
-        aggregatedOwners[id].files.push(repoFile);
-      }
-    });
-
-    Object.keys(aggregatedOwners).sort().forEach(key => {
-      const fileOwner = aggregatedOwners[key];
+    aggregatedOwners.forEach(fileOwner => {
       const owner = fileOwner.owner;
       // Slice from char 2 to remove the ./ prefix normalization
       const files = fileOwner.files.map(x => `- ${x.path.slice(2)}`).join('\n');
