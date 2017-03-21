@@ -18,6 +18,7 @@ const reviewSubmittedFailedPayload = JSON.parse(
 let req, res, sandbox;
 test.beforeEach(() => {
   sandbox = sinon.sandbox.create();
+  sandbox.stub(Git.prototype, 'pullLatestForRepo').returns(Promise.resolve());
 });
 
 test.afterEach(() => {
@@ -25,7 +26,7 @@ test.afterEach(() => {
 });
 
 // Note: Need to run these tests serially because of the shared "PullRequest"
-// stubbing state. If we don't since ava runs everything conccurently the
+// stubbing state. If we don't and since ava runs everything concurrently the
 // `afterEach` might not have ran yet when the next test does run.
 
 test.serial('on an opened pull request, if author is not part of owner ' +
@@ -58,6 +59,8 @@ test.serial('on an opened pull request, if author is not part of owner ' +
       .then(() => {
         t.is(postCommentSpy.callCount, 1, 'Should call postIssuesComment');
         t.is(setFailureStatusSpy.callCount, 1, 'Should call setFailureStatus');
+      }).catch(e => {
+        console.log(e);
       });
 });
 

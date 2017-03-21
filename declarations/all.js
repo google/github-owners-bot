@@ -43,13 +43,14 @@ type PullRequestInfo = {
 }
 
 type RepoFileOwner = {
-  id: ?string,
+  id: string,
   type: 'file' | 'dir',
   usernames: string[]
 }
 
 type OwnerTuple = {
-  owner: Owner,
+  type: 'file' | 'dir',
+  owner: Owner | string[],
   files: RepoFile[]
 }
 

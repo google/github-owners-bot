@@ -59,10 +59,36 @@ test('aggregate RepoFiles who share the same Owner into an ' +
   t.deepEqual(aggregatedOwners, [
     {
       owner: defaultStruct[0],
+      type: 'dir',
       files: [repoFile0, repoFile1],
     },
     {
       owner: defaultStruct[1],
+      type: 'dir',
+      files: [repoFile2, repoFile3],
+    }
+  ]);
+});
+
+test('aggregate RepoFiles who share the same usernames list into an ' +
+    'OwnerFileTuple for file level owners', t => {
+  t.plan(1);
+  const ownersMap = createOwnersMap(defaultStruct);
+  const repoFile0 = new RepoFile('README.md', ownersMap);
+  const repoFile1 = new RepoFile('some-src-file.js', ownersMap);
+  const repoFile2 = new RepoFile('build-system/some-src-file.js', ownersMap);
+  const repoFile3 = new RepoFile('build-system/some-src-file-1.js', ownersMap);
+  const repoFiles = [repoFile0, repoFile1, repoFile2, repoFile3];
+  const aggregatedOwners = createAggregatedOwnersTuple(repoFiles);
+  t.deepEqual(aggregatedOwners, [
+    {
+      owner: defaultStruct[0],
+      type: 'dir',
+      files: [repoFile0, repoFile1],
+    },
+    {
+      owner: defaultStruct[1],
+      type: 'dir',
       files: [repoFile2, repoFile3],
     }
   ]);

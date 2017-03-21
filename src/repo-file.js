@@ -50,7 +50,7 @@ export class RepoFile {
     } else {
       this.fileOwners = maybeOwner;
       this.repoFileOwner = {
-        id: null,
+        id: this.fileOwners.join(','),
         type: 'file',
         usernames: this.fileOwners,
       };

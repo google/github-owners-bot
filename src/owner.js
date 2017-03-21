@@ -94,15 +94,15 @@ export function createAggregatedOwnersTuple(
   repoFiles.forEach(repoFile => {
     const repoFileOwner = repoFile.findRepoFileOwner();
     const id = repoFileOwner.id;
-    if (repoFileOwner.type == 'dir' && id) {
-      if (!aggregatedOwners[id]) {
-        aggregatedOwners[id] = {
-          owner: repoFile.ownersMap[id],
-          files: [repoFile],
-        };
-      } else {
-        aggregatedOwners[id].files.push(repoFile);
-      }
+
+    if (!aggregatedOwners[id]) {
+      aggregatedOwners[id] = {
+        type: repoFileOwner.type,
+        owner: repoFile.ownersMap[id],
+        files: [repoFile],
+      };
+    } else {
+      aggregatedOwners[id].files.push(repoFile);
     }
   });
   return Object.keys(aggregatedOwners).sort().map(key => {

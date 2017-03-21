@@ -109,6 +109,7 @@ export function index(req: Object, res: Object) {
     if (process.env.NODE_ENV == 'production') {
       res.status(500).send('Something went wrong!');
     } else {
+      console.log(e.stack);
       res.status(500).send(e.stack);
     }
   });
