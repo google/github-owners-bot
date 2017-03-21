@@ -59,7 +59,7 @@ gulp.task('clean', (cb) => {
 });
 
 gulp.task('watch', function() {
-  return $$.watch(tests, {ignoreInitial: false},
+  return $$.watch(sources, {ignoreInitial: false},
       $$.batch(function(events, done) {
         gulp.start('default', done);
       }));
