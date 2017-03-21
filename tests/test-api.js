@@ -30,7 +30,7 @@ test.afterEach(() => {
 // stubbing state. If we don't since ava runs everything conccurently the
 // `afterEach` might not have ran yet when the next test does run.
 
-test.serial.cb('on an opened pull request, if author is not part of owner ' +
+test.serial('on an opened pull request, if author is not part of owner ' +
     'list and not full appproved it should set initial comment', t => {
   t.plan(2);
   const openedPayload = JSON.parse(
@@ -50,17 +50,16 @@ test.serial.cb('on an opened pull request, if author is not part of owner ' +
   const setFailureStatusSpy = sandbox.stub(
       PullRequest.prototype, 'setFailureStatus').returns(Promise.resolve());
 
-  request(app).post('/api/get-owners')
+  return request(app).post('/api/get-owners')
       .set('Content-Type', 'application/json')
       .send(openedPayload)
-      .end((err, res) => {
+      .then(() => {
         t.is(postCommentSpy.callCount, 1, 'Should call postIssuesComment');
         t.is(setFailureStatusSpy.callCount, 1, 'Should call setFailureStatus');
-        t.end();
       });
 });
 
-test.serial.cb('on an opened pull request, if author is also part of owner ' +
+test.serial('on an opened pull request, if author is also part of owner ' +
     'list it should set approved right away', t => {
   t.plan(2);
   sandbox.stub(PullRequest.prototype, 'getReviews')
@@ -75,18 +74,17 @@ test.serial.cb('on an opened pull request, if author is also part of owner ' +
   const setApprovedStatusSpy = sandbox.stub(
       PullRequest.prototype, 'setApprovedStatus').returns(Promise.resolve());
 
-  request(app).post('/api/get-owners')
+  return request(app).post('/api/get-owners')
       .set('Content-Type', 'application/json')
       .send(openedPayload)
-      .end((err, res) => {
+      .then(() => {
         t.is(postCommentSpy.callCount, 0, 'Should not call postIssuesComment');
         t.is(setApprovedStatusSpy.callCount, 1,
             'Should call setApprovedStatus');
-        t.end();
       });
 });
 
-test.serial.cb('on a synchronize action that is not fully approved yet, if ' +
+test.serial('on a synchronize action that is not fully approved yet, if ' +
     'the last bot comment is NOT equal to the current reviewers list, post a ' +
     'comment and set it to fail status', t => {
   t.plan(2);
@@ -102,17 +100,16 @@ test.serial.cb('on a synchronize action that is not fully approved yet, if ' +
       .stub(PullRequest.prototype, 'getLastApproversList')
       .returns(Promise.resolve([]));
 
-  request(app).post('/api/get-owners')
+  return request(app).post('/api/get-owners')
       .set('Content-Type', 'application/json')
       .send(syncPayload)
-      .end((err, res) => {
+      .then(() => {
         t.is(postCommentSpy.callCount, 1, 'Should call postIssuesComment');
         t.is(setFailureStatusSpy.callCount, 1, 'Should call setFailureStatus');
-        t.end();
       });
 });
 
-test.serial.cb('on a comment issue where the retry command is invoked and ' +
+test.serial('on a comment issue where the retry command is invoked and ' +
     'approvals are met, set approval status', t => {
   const retryPayload = JSON.parse(
       fs.readFileSync(
@@ -131,18 +128,17 @@ test.serial.cb('on a comment issue where the retry command is invoked and ' +
   sandbox.stub(PullRequest.prototype, 'getReviews')
       .returns(Promise.resolve(reviews));
 
-  request(app).post('/api/get-owners')
+  return request(app).post('/api/get-owners')
       .set('Content-Type', 'application/json')
       .send(retryPayload)
-      .end((err, res) => {
+      .then(() => {
         t.is(postCommentSpy.callCount, 0, 'Should not call postIssuesComment');
         t.is(setApprovalStatusSpy.callCount, 1,
             'Should call setApprovalStatusSpy');
-        t.end();
       });
 });
 
-test.serial.cb('on a comment issue where the retry command is invoked and ' +
+test.serial('on a comment issue where the retry command is invoked and ' +
     'approvals are met but actually the bot, should be a no op', t => {
   const retryPayload = JSON.parse(
       fs.readFileSync(
@@ -163,18 +159,17 @@ test.serial.cb('on a comment issue where the retry command is invoked and ' +
 
   retryPayload.comment.user.login = GITHUB_BOT_USERNAME;
 
-  request(app).post('/api/get-owners')
+  return request(app).post('/api/get-owners')
       .set('Content-Type', 'application/json')
       .send(retryPayload)
-      .end((err, res) => {
+      .then(() => {
         t.is(postCommentSpy.callCount, 0, 'Should not call postIssuesComment');
         t.is(setApprovalStatusSpy.callCount, 0,
             'Should not call setApprovalStatusSpy');
-        t.end();
       });
 });
 
-test.serial.cb('it should not post a new comment if the old reviewers list ' +
+test.serial('it should not post a new comment if the old reviewers list ' +
     'is equal to the new reviewers list', t => {
   sandbox.stub(PullRequest.prototype, 'getLastApproversList')
       .returns(Promise.resolve([['donttrustthisbot']]));
@@ -199,18 +194,17 @@ test.serial.cb('it should not post a new comment if the old reviewers list ' +
   const setFailureStatusSpy = sandbox.stub(
       PullRequest.prototype, 'setFailureStatus').returns(Promise.resolve());
 
-  request(app).post('/api/get-owners')
+  return request(app).post('/api/get-owners')
       .set('Content-Type', 'application/json')
       .send(syncPayload)
-      .end((err, res) => {
+      .then(() => {
         t.is(postCommentSpy.callCount, 0, 'Should not call postIssuesComment');
         t.is(setFailureStatusSpy.callCount, 1,
             'Should call setFailureStatusSpy');
-        t.end();
       });
 });
 
-test.serial.cb('it should post a new comment if the old reviewers list is ' +
+test.serial('it should post a new comment if the old reviewers list is ' +
     'not equal to the new reviewers list', t => {
   sandbox.stub(PullRequest.prototype, 'getLastApproversList')
       .returns(Promise.resolve([['a', 'b']]));
@@ -235,14 +229,13 @@ test.serial.cb('it should post a new comment if the old reviewers list is ' +
   const setFailureStatusSpy = sandbox.stub(
       PullRequest.prototype, 'setFailureStatus').returns(Promise.resolve());
 
-  request(app).post('/api/get-owners')
+  return request(app).post('/api/get-owners')
       .set('Content-Type', 'application/json')
       .send(syncPayload)
-      .end((err, res) => {
+      .then(() => {
         t.is(postCommentSpy.callCount, 1, 'Should call postIssuesComment');
         t.is(setFailureStatusSpy.callCount, 1,
             'Should call setFailureStatusSpy');
-        t.end();
       });
 });
 
