@@ -24,20 +24,34 @@ const path = require('path');
 const exec = bb.promisify(child_process.exec);
 const fs = bb.promisifyAll(require('fs'));
 
-function yamlReader(str: string): mixed[] {
-  return yaml.parse(str);
-}
 
+export class YamlReader {
+
+  read(str: string, pathToRepoDir: string,
+      ownerPath: string): Array<Owner> {
+    const entries = yaml.parse(str);
+    const dirOwners = [];
+    const fileOwners = [];
+    entries.forEach(x => {
+      if (typeof x == 'string') {
+        dirOwners.push(x);
+      } else if (typeof x == 'object') {
+      }
+    });
+    return [new Owner(dirOwners, pathToRepoDir, ownerPath)];
+  }
+}
 /**
  * Reads the actual OWNER file on the file system and parses it using the
  * passed in `formatReader` and returns an `OwnersMap`.
  */
-function ownersParser(formatReader: (str: string) => mixed[],
+function ownersParser(formatReader:
+    (x: string, y: string, z: string) => Array<Owner>,
     pathToRepoDir: string, ownersPaths: string[]): OwnersMap {
   const promises = ownersPaths.map(ownerPath => {
     const fullPath = path.resolve(pathToRepoDir, ownerPath);
     return fs.readFileAsync(fullPath).then(file => {
-      return new Owner(formatReader(file.toString()), pathToRepoDir, ownerPath);
+      return formatReader(file.toString(), pathToRepoDir, ownerPath);
     });
   });
   return bb.all(promises).then(createOwnersMap);
@@ -60,7 +74,8 @@ export class Git {
           const ownersPaths = stdoutToArray(res)
             // Remove unneeded string. We only want the file paths.
             .filter(x => !/your branch is up-to-date/i.test(x));
-          return ownersParser(yamlReader, dirPath, ownersPaths, author);
+          const reader = new YamlReader();
+          return ownersParser(reader.read, dirPath, ownersPaths, author);
         });
   }
 
