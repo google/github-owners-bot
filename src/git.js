@@ -49,7 +49,7 @@ export class Git {
    * Retrieves all the OWNERS paths inside a repository.
    */
   getOwnersFilesForBranch(author: string, dirPath: string,
-      targetBranch: string): OwnersMap {
+      targetBranch: string): Promise<OwnersMap> {
     // NOTE: for some reason `git ls-tree --full-tree -r HEAD **/OWNERS*
     // doesn't work from here.
     return exec(`cd ${dirPath} && git checkout ${targetBranch} ` +

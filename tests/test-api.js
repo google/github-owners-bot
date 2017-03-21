@@ -1,6 +1,8 @@
 import test from 'ava';
 import * as sinon from 'sinon';
 import {PullRequest, Review} from '../src/github';
+import {Owner} from '../src/owner';
+import {Git} from '../src/git';
 const request = require('supertest');
 const config = require('../config');
 const fs = require('fs');
@@ -62,6 +64,10 @@ test.serial('on an opened pull request, if author is not part of owner ' +
 test.serial('on an opened pull request, if author is also part of owner ' +
     'list it should set approved right away', t => {
   t.plan(2);
+  sandbox.stub(Git.prototype, 'getOwnersFilesForBranch')
+      .returns(Promise.resolve({
+        '.': new Owner(['donttrustthisbot'], '/path/to/repo', 'OWNERS.yaml')
+      }));
   sandbox.stub(PullRequest.prototype, 'getReviews')
       .returns(Promise.resolve([]));
   const openedPayload = JSON.parse(
@@ -98,7 +104,7 @@ test.serial('on a synchronize action that is not fully approved yet, if ' +
       PullRequest.prototype, 'setFailureStatus').returns(Promise.resolve());
   const lastApproversListStub = sandbox
       .stub(PullRequest.prototype, 'getLastApproversList')
-      .returns(Promise.resolve(['erwin-test']));
+      .returns(Promise.resolve([]));
 
   return request(app).post('/api/get-owners')
       .set('Content-Type', 'application/json')
@@ -111,6 +117,10 @@ test.serial('on a synchronize action that is not fully approved yet, if ' +
 
 test.serial('on a comment issue where the retry command is invoked and ' +
     'approvals are met, set approval status', t => {
+  sandbox.stub(Git.prototype, 'getOwnersFilesForBranch')
+      .returns(Promise.resolve({
+        '.': new Owner(['donttrustthisbot'], '/path/to/repo', 'OWNERS.yaml')
+      }));
   const retryPayload = JSON.parse(
       fs.readFileSync(
       'fixtures/retry_comment.json'));
@@ -171,6 +181,10 @@ test.serial('on a comment issue where the retry command is invoked and ' +
 
 test.serial('it should not post a new comment if the old reviewers list ' +
     'is equal to the new reviewers list', t => {
+  sandbox.stub(Git.prototype, 'getOwnersFilesForBranch')
+      .returns(Promise.resolve({
+        '.': new Owner(['donttrustthisbot'], '/path/to/repo', 'OWNERS.yaml')
+      }));
   sandbox.stub(PullRequest.prototype, 'getLastApproversList')
       .returns(Promise.resolve([['donttrustthisbot']]));
 

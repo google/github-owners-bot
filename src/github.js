@@ -140,7 +140,6 @@ export class PullRequest {
 
   postIssuesComment(body: string): Promise<*> {
     if (process.env.NODE_ENV != 'production') {
-      console.log(body);
       return Promise.resolve();
     }
     return request({
@@ -155,7 +154,7 @@ export class PullRequest {
 
   getCommentsByAuthor(author: string): Promise<PullRequestComment[]> {
     return this.getComments().then(comments => {
-      return comments.filter(x => x.author === author);
+      return comments.filter(x => x.author == author);
     });
   }
 

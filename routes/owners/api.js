@@ -115,14 +115,13 @@ export function index(req: Object, res: Object) {
 }
 
 function maybePostComment(prInfo: PullRequestInfo): Promise<*> {
-  const {pr, repoFiles, ownerTuples} = prInfo;
+  const {pr, ownerTuples} = prInfo;
   // If all approvals are still not met, do we need to submit a new post?
   return pr.getLastApproversList(GITHUB_BOT_USERNAME).then(reviewers => {
 
     const allFileOwnersUsernames = ownerTuples.map(fileOwner => {
       return fileOwner.owner.dirOwners;
     });
-    console.log(reviewers, allFileOwnersUsernames);
 
     // If the list of reviewers from the last bot's comment is different
     // from the current evaluation of required reviewers then we need to
@@ -130,7 +129,7 @@ function maybePostComment(prInfo: PullRequestInfo): Promise<*> {
     // of previously required reviewers or less, but in any case we need to
     // post the list again)
     if (!_.isEqual(reviewers, allFileOwnersUsernames)) {
-      return pr.postIssuesComment(pr.composeBotComment(repoFiles))
+      return pr.postIssuesComment(pr.composeBotComment(ownerTuples))
           .then(() => {
             return pr.setFailureStatus();
           });
