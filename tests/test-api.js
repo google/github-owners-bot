@@ -11,10 +11,6 @@ import {app} from '../app';
 
 const GITHUB_BOT_USERNAME = config.get('GITHUB_BOT_USERNAME');
 
-// Figure out how to get this to work on travis since we need to have
-// the target repo
-if (!process.env.TRAVIS) {
-
 const reviewSubmittedFailedPayload = JSON.parse(
     fs.readFileSync(
     'fixtures/review_submitted_failure.json'));
@@ -252,11 +248,3 @@ test.serial('it should post a new comment if the old reviewers list is ' +
             'Should call setFailureStatusSpy');
       });
 });
-
-} else {
-
-  test('to appease ava', t => {
-    t.plan(1);
-    t.is(1, 1);
-  });
-}
