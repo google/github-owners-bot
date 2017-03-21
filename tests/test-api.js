@@ -31,6 +31,10 @@ test.afterEach(() => {
 test.serial('on an opened pull request, if author is not part of owner ' +
     'list and not full appproved it should set initial comment', t => {
   t.plan(2);
+  sandbox.stub(Git.prototype, 'getOwnersFilesForBranch')
+      .returns(Promise.resolve({
+        '.': new Owner(['donttrustthisbot'], '/path/to/repo', 'OWNERS.yaml')
+      }));
   const openedPayload = JSON.parse(
       fs.readFileSync(
       'fixtures/opened.json'));

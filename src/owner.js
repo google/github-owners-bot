@@ -52,8 +52,18 @@ export class Owner {
     config.forEach(entry => {
       if (typeof entry === 'string') {
         this.dirOwners.push(entry);
-      } else if (entry && entry['file-only']) {
-        // TODO(erwin): support file level entries. Finalize spec for it.
+      } else if (typeof entry === 'object') {
+        const username = Object.keys(entry)[0];
+        const files = entry[username];
+        files.forEach(filepath => {
+          const path = `${this.dirname}/${filepath}`;
+          const fileOwners = this.fileOwners[path];
+          if (!fileOwners) {
+            this.fileOwners[path] = [username];
+          } else if (fileOwners.indexOf(username) == -1) {
+            fileOwners.push(username);
+          }
+        });
       }
     });
     this.dirOwners.sort();

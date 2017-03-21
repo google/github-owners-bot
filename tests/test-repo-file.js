@@ -22,7 +22,11 @@ import test from 'ava';
 const pathToRepo = '/path/to/repo';
 
 const defaultStruct = [
-  new Owner(['person-0'], pathToRepo, 'OWNERS.yaml'),
+  new Owner(['person-0', {
+    'file-level-owner-0': [
+      'file-with-file-level-owner.js',
+    ]
+  }], pathToRepo, 'OWNERS.yaml'),
   new Owner(['person-0', 'build-system-person-0'],
       pathToRepo, 'build-system/OWNERS.yaml'),
   new Owner(['some-extension-owner-0'],
@@ -58,4 +62,8 @@ test('find owner for deep level dir', t => {
   const ownerFile = repoFile.findRepoFileOwner();
   t.deepEqual(ownerFile.id, defaultStruct[2].path);
   t.deepEqual(ownerFile.usernames, defaultStruct[2].dirOwners);
+});
+
+test('find file level owner', t => {
+
 });
