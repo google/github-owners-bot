@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
+var $$ = require('gulp-load-plugins')();
 const gulp = require('gulp');
-const babel = require('gulp-babel');
-const flow = require('gulp-flowtype');
-const eslint = require('gulp-eslint');
 const del = require('del');
 const argv = require('minimist')(process.argv.slice(2));
-const ava = require('gulp-ava');
 
 const sources = ['{app,config}.js', '{src,routes}/**/*.js'];
 
@@ -30,17 +27,17 @@ gulp.task('default', ['flow', 'lint', 'babel']);
 
 gulp.task('babel', () => {
   return gulp.src(sources)
-    .pipe(babel())
+    .pipe($$.babel())
     .pipe(gulp.dest('dist'));
 });
 
 gulp.task('test', () => {
-  return gulp.src(tests).pipe(ava({verbose: true, timeout: '15s'}));
+  return gulp.src(tests).pipe($$.ava({verbose: true, timeout: '15s'}));
 });
 
 gulp.task('flow', () => {
   return gulp.src(sources)
-    .pipe(flow({
+    .pipe($$.flowtype({
         all: false,
         weak: false,
         declarations: './declarations',
@@ -52,9 +49,9 @@ gulp.task('flow', () => {
 
 gulp.task('lint', () => {
   return gulp.src(sources)
-      .pipe(eslint())
-      .pipe(eslint.format())
-      .pipe(eslint.failAfterError());
+      .pipe($$.eslint())
+      .pipe($$.eslint.format())
+      .pipe($$.eslint.failAfterError());
 });
 
 gulp.task('clean', (cb) => {
@@ -62,9 +59,15 @@ gulp.task('clean', (cb) => {
 });
 
 gulp.task('watch', function() {
-  return gulp.watch(sources, ['default']);
+  return $$.watch(tests, {ignoreInitial: false},
+      $$.batch(function(events, done) {
+        gulp.start('default', done);
+      }));
 });
 
 gulp.task('watch:test', function() {
-  return gulp.watch(tests, ['test']);
+  return $$.watch(tests, {ignoreInitial: false},
+      $$.batch(function(events, done) {
+        gulp.start('test', done);
+      }));
 });
