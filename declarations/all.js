@@ -43,7 +43,7 @@ type PullRequestInfo = {
 }
 
 type RepoFileOwner = {
-  id: string,
+  id: ?string,
   type: 'file' | 'dir',
   usernames: string[]
 }

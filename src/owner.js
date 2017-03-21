@@ -34,7 +34,7 @@ export class Owner {
   fullpath: string;
   score: number;
   dirOwners: string[];
-  fileOwners: Object;
+  fileOwners: {[key: string]: Set<string>};
 
   constructor(config: any, pathToRepoDir: string, filePath: string) {
     // We want it have the leading ./ to evaluate `.` later on
@@ -59,14 +59,22 @@ export class Owner {
           const path = `${this.dirname}/${filepath}`;
           const fileOwners = this.fileOwners[path];
           if (!fileOwners) {
-            this.fileOwners[path] = [username];
-          } else if (fileOwners.indexOf(username) == -1) {
-            fileOwners.push(username);
+            this.fileOwners[path] = new Set([username]);
+          } else {
+            fileOwners.add(username);
           }
         });
       }
     });
     this.dirOwners.sort();
+  }
+
+  getFileLevelOwners(repoFile: RepoFile): ?string[] {
+    const fileOwners = this.fileOwners[repoFile.path];
+    if (fileOwners) {
+      return Array.from(fileOwners).sort();
+    }
+    return null;
   }
 }
 
@@ -84,14 +92,17 @@ export function createAggregatedOwnersTuple(
   const aggregatedOwners = Object.create(null);
 
   repoFiles.forEach(repoFile => {
-    const id = repoFile.findRepoFileOwner().id;
-    if (!aggregatedOwners[id]) {
-      aggregatedOwners[id] = {
-        owner: repoFile.dirOwner,
-        files: [repoFile],
-      };
-    } else {
-      aggregatedOwners[id].files.push(repoFile);
+    const repoFileOwner = repoFile.findRepoFileOwner();
+    const id = repoFileOwner.id;
+    if (repoFileOwner.type == 'dir' && id) {
+      if (!aggregatedOwners[id]) {
+        aggregatedOwners[id] = {
+          owner: repoFile.ownersMap[id],
+          files: [repoFile],
+        };
+      } else {
+        aggregatedOwners[id].files.push(repoFile);
+      }
     }
   });
   return Object.keys(aggregatedOwners).sort().map(key => {

@@ -56,7 +56,6 @@ test('aggregate RepoFiles who share the same Owner into an ' +
   const repoFile3 = new RepoFile('build-system/some-src-file-1.js', ownersMap);
   const repoFiles = [repoFile0, repoFile1, repoFile2, repoFile3];
   const aggregatedOwners = createAggregatedOwnersTuple(repoFiles);
-  console.log(aggregatedOwners);
   t.deepEqual(aggregatedOwners, [
     {
       owner: defaultStruct[0],

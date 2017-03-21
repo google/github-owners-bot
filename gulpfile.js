@@ -32,7 +32,7 @@ gulp.task('babel', () => {
 });
 
 gulp.task('test', () => {
-  return gulp.src(tests).pipe($$.ava({verbose: true, timeout: '15s'}));
+  return gulp.src(tests).pipe($$.ava({verbose: true, timeout: '20s'}));
 });
 
 gulp.task('flow', () => {
@@ -66,7 +66,7 @@ gulp.task('watch', function() {
 });
 
 gulp.task('watch:test', function() {
-  return $$.watch(tests, {ignoreInitial: false},
+  return $$.watch(sources.concat(tests), {ignoreInitial: false},
       $$.batch(function(events, done) {
         gulp.start('test', done);
       }));
