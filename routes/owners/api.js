@@ -16,11 +16,11 @@
 
 /* @flow */
 
-import * as bb from 'bluebird';
 import * as _ from 'lodash';
 import {Git} from '../../src/git';
 import {PullRequest} from '../../src/github';
-import {findOwners} from '../../src/owner';
+import {createAggregatedOwnersTuple} from '../../src/owner';
+import {RepoFile} from '../../src/repo-file';
 import * as express from 'express';
 const config = require('../../config');
 const GITHUB_BOT_USERNAME = config.get('GITHUB_BOT_USERNAME');
@@ -41,17 +41,10 @@ const prActionTypes: string[] = [
   'synchronize',
 ];
 
-function getOwners(pr: PullRequest) : Promise<FileOwners> {
+function getOwners(pr: PullRequest) : Promise<RepoFile[]> {
   return git.pullLatestForRepo(GITHUB_REPO_DIR, 'origin', 'master').then(() => {
-    const promises = bb.all([
-      pr.getFiles(),
-      git.getOwnersFilesForBranch(pr.author, GITHUB_REPO_DIR, 'master'),
-    ]);
-    return promises.then(function(res) {
-      const files = res[0];
-      const ownersMap = res[1];
-      return findOwners(files, ownersMap);
-    });
+    return git.getOwnersFilesForBranch(pr.author, GITHUB_REPO_DIR, 'master')
+        .then(ownersMap => pr.getFiles(ownersMap));
   });
 }
 
@@ -112,22 +105,24 @@ export function index(req: Object, res: Object) {
         .then(processPullRequest.bind(null, body));
   }
 
-  return promise.then(ok).catch(() => {
-    res.status(500).send('Something went wrong!');
+  return promise.then(ok).catch(e => {
+    if (process.env.NODE_ENV == 'production') {
+      res.status(500).send('Something went wrong!');
+    } else {
+      console.log(e.stack);
+      res.status(500).send(e.stack);
+    }
   });
 }
 
 function maybePostComment(prInfo: PullRequestInfo): Promise<*> {
-  const {pr, fileOwners} = prInfo;
+  const {pr, ownerTuples} = prInfo;
   // If all approvals are still not met, do we need to submit a new post?
   return pr.getLastApproversList(GITHUB_BOT_USERNAME).then(reviewers => {
 
-    const allFileOwnersUsernames = Object.keys(fileOwners).sort()
-        .map(key => {
-          const fileOwner = fileOwners[key];
-          const owner = fileOwner.owner;
-          return owner.dirOwners;
-        });
+    const allFileOwnersUsernames = ownerTuples.map(fileOwner => {
+      return fileOwner.owner.dirOwners;
+    });
 
     // If the list of reviewers from the last bot's comment is different
     // from the current evaluation of required reviewers then we need to
@@ -135,7 +130,7 @@ function maybePostComment(prInfo: PullRequestInfo): Promise<*> {
     // of previously required reviewers or less, but in any case we need to
     // post the list again)
     if (!_.isEqual(reviewers, allFileOwnersUsernames)) {
-      return pr.postIssuesComment(pr.composeBotComment(fileOwners))
+      return pr.postIssuesComment(pr.composeBotComment(ownerTuples))
           .then(() => {
             return pr.setFailureStatus();
           });
@@ -145,10 +140,11 @@ function maybePostComment(prInfo: PullRequestInfo): Promise<*> {
 }
 
 function getPullRequestInfo(pr: PullRequest): Promise<PullRequestInfo> {
-  return getOwners(pr).then(fileOwners => {
+  return getOwners(pr).then(repoFiles => {
     return pr.getUniqueReviews().then(reviews => {
-      const approvalsMet = pr.areAllApprovalsMet(fileOwners, reviews);
-      return {pr, fileOwners, reviews, approvalsMet};
+      const approvalsMet = pr.areAllApprovalsMet(repoFiles, reviews);
+      const ownerTuples = createAggregatedOwnersTuple(repoFiles);
+      return {pr, repoFiles, reviews, approvalsMet, ownerTuples};
     });
   });
 }
@@ -171,11 +167,11 @@ function processPullRequest(body: Object,
 }
 
 function openedAction(prInfo: PullRequestInfo): Promise<*> {
-  const {pr, fileOwners, approvalsMet} = prInfo;
+  const {pr, approvalsMet, ownerTuples} = prInfo;
   if (approvalsMet) {
     return prInfo.pr.setApprovedStatus();
   }
-  return pr.postIssuesComment(pr.composeBotComment(fileOwners))
+  return pr.postIssuesComment(pr.composeBotComment(ownerTuples))
     .then(() => {
       return pr.setFailureStatus();
     });

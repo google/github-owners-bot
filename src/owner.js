@@ -34,7 +34,7 @@ export class Owner {
   fullpath: string;
   score: number;
   dirOwners: string[];
-  fileOwners: Object;
+  fileOwners: {[key: string]: Set<string>};
 
   constructor(config: any, pathToRepoDir: string, filePath: string) {
     // We want it have the leading ./ to evaluate `.` later on
@@ -52,52 +52,30 @@ export class Owner {
     config.forEach(entry => {
       if (typeof entry === 'string') {
         this.dirOwners.push(entry);
-      } else if (entry && entry['file-only']) {
-        // TODO(erwin): support file level entries. Finalize spec for it.
+      } else if (typeof entry === 'object') {
+        const username = Object.keys(entry)[0];
+        const files = entry[username];
+        files.forEach(filepath => {
+          const path = `${this.dirname}/${filepath}`;
+          const fileOwners = this.fileOwners[path];
+          if (!fileOwners) {
+            this.fileOwners[path] = new Set([username]);
+          } else {
+            fileOwners.add(username);
+          }
+        });
       }
     });
     this.dirOwners.sort();
   }
-}
 
-/**
- * Returns a list of github usernames that can be "approvers" for the set
- * of files. It first tries to find the interection across the files and if
- * there are none it will return the union across usernames.
- */
-export function findOwners(files: RepoFile[],
-    ownersMap: OwnersMap): FileOwners {
-  const fileOwners: FileOwners = Object.create(null);
-  files.forEach((file : RepoFile) => {
-    const owner = findClosestOwnersFile(file, ownersMap);
-    if (!fileOwners[owner.dirname]) {
-      fileOwners[owner.dirname] = ({
-        owner,
-        files: [file],
-      } : FileOwner);
-    } else {
-      fileOwners[owner.dirname].files.push(file);
+  getFileLevelOwners(repoFile: RepoFile): ?string[] {
+    const fileOwners = this.fileOwners[repoFile.path];
+    if (fileOwners) {
+      return Array.from(fileOwners).sort();
     }
-  });
-  return fileOwners;
-}
-
-/**
- * Using the `ownersMap` key which is the path to the actual OWNER file
- * in the repo, we simulate a folder traversal by splitting the path and
- * finding the closest OWNER file for a RepoFile.
- */
-export function findClosestOwnersFile(file: RepoFile,
-    ownersMap: OwnersMap): Owner {
-  let dirname = file.dirname;
-  let owner = ownersMap[dirname];
-  const dirs = dirname.split(path.sep);
-
-  while (!owner && dirs.pop() && dirs.length) {
-    dirname = dirs.join(path.sep);
-    owner = ownersMap[dirname];
+    return null;
   }
-  return owner;
 }
 
 export function createOwnersMap(owners: Owner[]): OwnersMap {
@@ -107,4 +85,27 @@ export function createOwnersMap(owners: Owner[]): OwnersMap {
     }
     return ownersMap;
   }, Object.create(null));
+}
+
+export function createAggregatedOwnersTuple(
+    repoFiles: RepoFile[]): OwnerTuples {
+  const aggregatedOwners = Object.create(null);
+
+  repoFiles.forEach(repoFile => {
+    const repoFileOwner = repoFile.findRepoFileOwner();
+    const id = repoFileOwner.id;
+
+    if (!aggregatedOwners[id]) {
+      aggregatedOwners[id] = {
+        type: repoFileOwner.type,
+        owner: repoFile.ownersMap[id],
+        files: [repoFile],
+      };
+    } else {
+      aggregatedOwners[id].files.push(repoFile);
+    }
+  });
+  return Object.keys(aggregatedOwners).sort().map(key => {
+    return aggregatedOwners[key];
+  });;
 }

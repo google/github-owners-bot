@@ -28,11 +28,12 @@
     "context": false,
     "global": false,
     "describes": true,
+    "Owner": false,
     "OwnersMap": false,
     "GitHubStatusPost": false,
-    "FileOwner": false,
-    "FileOwners": false,
-    "PullRequestInfo": false
+    "OwnerTuples": false,
+    "PullRequestInfo": false,
+    "RepoFileOwner": false
   },
   "rules": {
     "array-bracket-spacing": [2, "never"],

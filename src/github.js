@@ -87,7 +87,7 @@ export class PullRequest {
    * and pulls out the files that have been changed in any way
    * and returns type RepoFile[].
    */
-  getFiles(): Promise<RepoFile[]> {
+  getFiles(ownersMap: OwnersMap): Promise<RepoFile[]> {
     return request({
       url: `https://api.github.com/repos/${this.project}/${this.repo}/pulls/` +
           `${this.id}/files`,
@@ -96,7 +96,7 @@ export class PullRequest {
       headers,
     }).then(function(res: any) {
       const body = JSON.parse(res.body);
-      return body.map(item => new RepoFile(item.filename));
+      return body.map(item => new RepoFile(item.filename, ownersMap));
     });
   }
 
@@ -139,6 +139,9 @@ export class PullRequest {
   }
 
   postIssuesComment(body: string): Promise<*> {
+    if (process.env.NODE_ENV != 'production') {
+      return Promise.resolve();
+    }
     return request({
       url: `https://api.github.com/repos/${this.project}/${this.repo}/issues/` +
           `${this.id}/comments`,
@@ -151,7 +154,7 @@ export class PullRequest {
 
   getCommentsByAuthor(author: string): Promise<PullRequestComment[]> {
     return this.getComments().then(comments => {
-      return comments.filter(x => x.author === author);
+      return comments.filter(x => x.author == author);
     });
   }
 
@@ -197,7 +200,7 @@ export class PullRequest {
     });
   }
 
-  areAllApprovalsMet(fileOwners: FileOwners, reviews: Review[]): boolean {
+  areAllApprovalsMet(repoFiles: RepoFile[], reviews: Review[]): boolean {
     const reviewersWhoApproved = reviews.filter(x => {
       return x.state == 'approved';
     }).map(x => x.username);
@@ -205,11 +208,9 @@ export class PullRequest {
     // PR.
     reviewersWhoApproved.push(this.author);
 
-    return Object.keys(fileOwners).every(path => {
-      const fileOwner = fileOwners[path];
-      const owner = fileOwner.owner;
-      _.intersection(owner.dirOwners, reviewersWhoApproved);
-      return _.intersection(owner.dirOwners, reviewersWhoApproved).length > 0;
+    return repoFiles.every(repoFile => {
+      return _.intersection(repoFile.findRepoFileOwner().usernames,
+          reviewersWhoApproved).length > 0;
     });
   }
 
@@ -242,19 +243,19 @@ export class PullRequest {
     });
   }
 
-  composeBotComment(fileOwners: FileOwners) {
+  composeBotComment(aggregatedOwners: OwnerTuples): string {
     let comment = 'Hi, ampproject bot here! Here are a list of the owners ' +
         'that can approve your files.\n\nYou may leave an issue comment ' +
         `stating "@${GITHUB_BOT_USERNAME} retry!" to force me to re-evaluate ` +
         'this Pull Request\'s status\n\n';
-    Object.keys(fileOwners).sort().forEach(key => {
-      const fileOwner = fileOwners[key];
+    aggregatedOwners.forEach(fileOwner => {
       const owner = fileOwner.owner;
       // Slice from char 2 to remove the ./ prefix normalization
       const files = fileOwner.files.map(x => `- ${x.path.slice(2)}`).join('\n');
       const usernames = '/to ' + owner.dirOwners.join(' ') + '\n';
       comment += usernames + files + '\n\n';
     });
+
     comment += '\n\nFor any issues please file a bug at ' +
         'https://github.com/google/github-owners-bot/issues';
     return comment;

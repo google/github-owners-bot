@@ -1,6 +1,8 @@
 import test from 'ava';
 import * as sinon from 'sinon';
 import {PullRequest, Review} from '../src/github';
+import {Owner} from '../src/owner';
+import {Git} from '../src/git';
 const request = require('supertest');
 const config = require('../config');
 const fs = require('fs');
@@ -9,10 +11,6 @@ import {app} from '../app';
 
 const GITHUB_BOT_USERNAME = config.get('GITHUB_BOT_USERNAME');
 
-// Figure out how to get this to work on travis since we need to have
-// the target repo
-if (!process.env.TRAVIS) {
-
 const reviewSubmittedFailedPayload = JSON.parse(
     fs.readFileSync(
     'fixtures/review_submitted_failure.json'));
@@ -20,6 +18,7 @@ const reviewSubmittedFailedPayload = JSON.parse(
 let req, res, sandbox;
 test.beforeEach(() => {
   sandbox = sinon.sandbox.create();
+  sandbox.stub(Git.prototype, 'pullLatestForRepo').returns(Promise.resolve());
 });
 
 test.afterEach(() => {
@@ -27,12 +26,16 @@ test.afterEach(() => {
 });
 
 // Note: Need to run these tests serially because of the shared "PullRequest"
-// stubbing state. If we don't since ava runs everything conccurently the
+// stubbing state. If we don't and since ava runs everything concurrently the
 // `afterEach` might not have ran yet when the next test does run.
 
 test.serial('on an opened pull request, if author is not part of owner ' +
     'list and not full appproved it should set initial comment', t => {
   t.plan(2);
+  sandbox.stub(Git.prototype, 'getOwnersFilesForBranch')
+      .returns(Promise.resolve({
+        '.': new Owner(['donttrustthisbot'], '/path/to/repo', 'OWNERS.yaml')
+      }));
   const openedPayload = JSON.parse(
       fs.readFileSync(
       'fixtures/opened.json'));
@@ -56,12 +59,18 @@ test.serial('on an opened pull request, if author is not part of owner ' +
       .then(() => {
         t.is(postCommentSpy.callCount, 1, 'Should call postIssuesComment');
         t.is(setFailureStatusSpy.callCount, 1, 'Should call setFailureStatus');
+      }).catch(e => {
+        console.log(e);
       });
 });
 
 test.serial('on an opened pull request, if author is also part of owner ' +
     'list it should set approved right away', t => {
   t.plan(2);
+  sandbox.stub(Git.prototype, 'getOwnersFilesForBranch')
+      .returns(Promise.resolve({
+        '.': new Owner(['donttrustthisbot'], '/path/to/repo', 'OWNERS.yaml')
+      }));
   sandbox.stub(PullRequest.prototype, 'getReviews')
       .returns(Promise.resolve([]));
   const openedPayload = JSON.parse(
@@ -111,6 +120,10 @@ test.serial('on a synchronize action that is not fully approved yet, if ' +
 
 test.serial('on a comment issue where the retry command is invoked and ' +
     'approvals are met, set approval status', t => {
+  sandbox.stub(Git.prototype, 'getOwnersFilesForBranch')
+      .returns(Promise.resolve({
+        '.': new Owner(['donttrustthisbot'], '/path/to/repo', 'OWNERS.yaml')
+      }));
   const retryPayload = JSON.parse(
       fs.readFileSync(
       'fixtures/retry_comment.json'));
@@ -171,6 +184,10 @@ test.serial('on a comment issue where the retry command is invoked and ' +
 
 test.serial('it should not post a new comment if the old reviewers list ' +
     'is equal to the new reviewers list', t => {
+  sandbox.stub(Git.prototype, 'getOwnersFilesForBranch')
+      .returns(Promise.resolve({
+        '.': new Owner(['donttrustthisbot'], '/path/to/repo', 'OWNERS.yaml')
+      }));
   sandbox.stub(PullRequest.prototype, 'getLastApproversList')
       .returns(Promise.resolve([['donttrustthisbot']]));
 
@@ -238,11 +255,3 @@ test.serial('it should post a new comment if the old reviewers list is ' +
             'Should call setFailureStatusSpy');
       });
 });
-
-} else {
-
-  test('to appease ava', t => {
-    t.plan(1);
-    t.is(1, 1);
-  });
-}

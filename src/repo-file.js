@@ -15,7 +15,7 @@
  */
 
 /* @flow */
-
+import {Owner} from './owner';
 import * as path from 'path';
 
 /**
@@ -23,13 +23,66 @@ import * as path from 'path';
  * This is hydrated from the github pull request api.
  */
 export class RepoFile {
+
   path: string;
   dirname: string;
+  ownersMap: OwnersMap;
+  dirOwner: ?Owner;
+  repoFileOwner: RepoFileOwner;
+  fileOwners: ?string[];
 
-  constructor(filePath: string) {
+  constructor(filePath: string, ownersMap: OwnersMap) {
     // We want it have the leading ./ to evaluate `.` later on
-    /** @type {string} */
     this.path = /^\./.test(filePath) ? filePath : `.${path.sep}${filePath}`;
     this.dirname = path.dirname(this.path);
+    this.ownersMap = ownersMap;
+    this.dirOwner = null;
+    this.fileOwners = null;
+
+    const maybeOwner = this._findOwnerFile();
+    if (maybeOwner instanceof Owner) {
+      this.dirOwner = maybeOwner;
+      this.repoFileOwner = {
+        id: this.dirOwner.dirname,
+        type: 'dir',
+        usernames: this.dirOwner.dirOwners,
+      };
+    } else {
+      this.fileOwners = maybeOwner;
+      this.repoFileOwner = {
+        id: this.fileOwners.join(','),
+        type: 'file',
+        usernames: this.fileOwners,
+      };
+    }
+  }
+
+  _findOwnerFile(): Owner | string[] {
+    let ownerCandidate = null;
+    const fileOwners = new Set([]);
+    const dirs = this.dirname.split(path.sep);
+
+    while (dirs.length) {
+      const dirname = dirs.join(path.sep);
+      const curOwner = this.ownersMap[dirname];
+      if (curOwner) {
+        const curOwnerFileOwners = curOwner.getFileLevelOwners(this);
+        if (curOwnerFileOwners) {
+          curOwnerFileOwners.forEach(x => fileOwners.add(x));
+        }
+      }
+      if (!ownerCandidate) {
+        ownerCandidate = curOwner;
+      }
+      dirs.pop();
+    }
+    if (fileOwners.size > 0) {
+      return Array.from(fileOwners).sort();
+    }
+    return ownerCandidate;
+  }
+
+  findRepoFileOwner(): RepoFileOwner {
+    return this.repoFileOwner;
   }
 }
