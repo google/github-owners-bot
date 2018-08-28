@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-/* @flow */
-
 import {RepoFile} from './repo-file';
 const config = require('../config');
 import * as bb from 'bluebird';
 import * as _ from 'lodash';
 
 const request = bb.promisify(require('request'));
-const GITHUB_ACCESS_TOKEN: string = config.get('GITHUB_ACCESS_TOKEN');
+const GITHUB_ACCESS_TOKEN = config.get('GITHUB_ACCESS_TOKEN');
 const GITHUB_BOT_USERNAME = config.get('GITHUB_BOT_USERNAME');
 
-type Headers = {
-  [key: string]: string
-}
-
-const headers: Headers = {
+const headers = {
   'User-Agent': 'get-owners',
   'Accept': 'application/vnd.github.v3+json',
 };
@@ -42,22 +36,7 @@ const qs = {
  */
 export class PullRequest {
 
-  id: number;
-  author: string;
-  state: string;
-  headRef: string;
-  headSha: string;
-  baseRef: string;
-  baseSha: string;
-  project: string;
-  repo: string;
-  cloneUrl: string;
-  statusesUrl: string;
-  reviewCommentsUrl: string;
-  commentsUrl: string;
-  reviewersUrl: string;
-
-  constructor(json: any) {
+  constructor(json) {
     this.id = json.number;
     this.author = json.user.login;
     this.state = json.state;
@@ -87,20 +66,20 @@ export class PullRequest {
    * and pulls out the files that have been changed in any way
    * and returns type RepoFile[].
    */
-  getFiles(): Promise<RepoFile[]> {
+  getFiles() {
     return request({
       url: `https://api.github.com/repos/${this.project}/${this.repo}/pulls/` +
           `${this.id}/files`,
       method: 'GET',
       qs,
       headers,
-    }).then(function(res: any) {
+    }).then(function(res) {
       const body = JSON.parse(res.body);
       return body.map(item => new RepoFile(item.filename));
     });
   }
 
-  getReviews(): Promise<Review[]> {
+  getReviews() {
     const reviewsHeaders = Object.assign({},
         headers,
         // Need to opt-into reviews API
@@ -111,7 +90,7 @@ export class PullRequest {
       method: 'GET',
       qs,
       headers: reviewsHeaders,
-    }).then(function(res: any) {
+    }).then(function(res) {
       const body = JSON.parse(res.body);
       // Sort by latest submitted_at date first since users and state
       // are not unique.
@@ -129,7 +108,7 @@ export class PullRequest {
     });
   }
 
-  getComments(): Promise<PullRequestComment[]> {
+  getComments() {
     return bb.all([
       this.getCommentByType_('pulls'),
       this.getCommentByType_('issues'),
@@ -138,7 +117,7 @@ export class PullRequest {
     });
   }
 
-  postIssuesComment(body: string): Promise<*> {
+  postIssuesComment(body) {
     return request({
       url: `https://api.github.com/repos/${this.project}/${this.repo}/issues/` +
           `${this.id}/comments`,
@@ -149,13 +128,13 @@ export class PullRequest {
     });
   }
 
-  getCommentsByAuthor(author: string): Promise<PullRequestComment[]> {
+  getCommentsByAuthor(author) {
     return this.getComments().then(comments => {
       return comments.filter(x => x.author === author);
     });
   }
 
-  getCommentByType_(type: string) {
+  getCommentByType_(type) {
     return request({
       url: `https://api.github.com/repos/${this.project}/${this.repo}/` +
           `${type}/${this.id}/comments`,
@@ -169,7 +148,7 @@ export class PullRequest {
     }, headers);
   }
 
-  setStatus(body: GitHubStatusPost) {
+  setStatus(body) {
     return request({
       url: this.statusesUrl,
       json: true,
@@ -197,7 +176,7 @@ export class PullRequest {
     });
   }
 
-  areAllApprovalsMet(fileOwners: FileOwners, reviews: Review[]): boolean {
+  areAllApprovalsMet(fileOwners, reviews) {
     const reviewersWhoApproved = reviews.filter(x => {
       return x.state == 'approved';
     }).map(x => x.username);
@@ -217,7 +196,7 @@ export class PullRequest {
     return this.author == GITHUB_BOT_USERNAME;
   }
 
-  getLastApproversList(author: string): Promise<Array<string[]>> {
+  getLastApproversList(author) {
     return this.getCommentsByAuthor(author).then(comments => {
       comments = comments.slice(0).sort((a, b) => b.updatedAt - a.updatedAt);
       for (let i = 0; i < comments.length; i++) {
@@ -242,7 +221,7 @@ export class PullRequest {
     });
   }
 
-  composeBotComment(fileOwners: FileOwners) {
+  composeBotComment(fileOwners) {
     let comment = 'Hi, ampproject bot here! Here are a list of the owners ' +
         'that can approve your files.\n\nYou may leave an issue comment ' +
         `stating "@${GITHUB_BOT_USERNAME} retry!" to force me to re-evaluate ` +
@@ -273,15 +252,7 @@ export class PullRequest {
 
 export class PullRequestComment {
 
-  id: number;
-  type: string;
-  author: string;
-  body: string;
-  createdAt: Date;
-  updatedAt: Date;
-  url: string;
-
-  constructor(json: any) {
+  constructor(json) {
     this.id = json.id;
     this.type = 'pull_request_review_id' in json ? 'pulls' : 'issues';
     this.author = json.user.login;
@@ -294,13 +265,7 @@ export class PullRequestComment {
 
 export class Label {
 
-  id: number;
-  url: string;
-  name: string;
-  color: string;
-  default: boolean;
-
-  constructor(json: any) {
+  constructor(json) {
     this.id = json.id;
     this.url = json.url;
     this.name = json.name;
@@ -311,27 +276,21 @@ export class Label {
 
 export class Sender {
 
-  username: string;
-
-  constructor(json: any) {
+  constructor(json) {
     this.username = json.login;
   }
 }
 
 export class Review {
-  id: number;
-  state: 'approved' | 'changes_requested' | 'comment';
-  username: string;
-  submitted_at: Date;
 
-  constructor(json: any) {
+  constructor(json) {
     this.id = json.id;
     this.username = json.user.login;
     this.state = json.state.toLowerCase();
     this.submitted_at = new Date(json.submitted_at);
   }
 
-  isApproved(): boolean {
+  isApproved() {
     return this.state == 'approved';
   }
 }

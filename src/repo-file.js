@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/* @flow */
-
 import * as path from 'path';
 
 /**
@@ -23,12 +21,9 @@ import * as path from 'path';
  * This is hydrated from the github pull request api.
  */
 export class RepoFile {
-  path: string;
-  dirname: string;
 
-  constructor(filePath: string) {
+  constructor(filePath) {
     // We want it have the leading ./ to evaluate `.` later on
-    /** @type {string} */
     this.path = /^\./.test(filePath) ? filePath : `.${path.sep}${filePath}`;
     this.dirname = path.dirname(this.path);
   }
