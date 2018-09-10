@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Owner, createOwnersMap} from './owner';
+const {Owner, createOwnersMap} = require('./owner');
 const bb = require('bluebird');
 const child_process = require('child_process');
 const yaml = require('yamljs');

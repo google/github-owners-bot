@@ -16,12 +16,12 @@
 
 /* @flow */
 
-import * as bb from 'bluebird';
-import * as _ from 'lodash';
-import {Git} from '../../src/git';
-import {PullRequest} from '../../src/github';
-import {findOwners} from '../../src/owner';
-import * as express from 'express';
+const bb = require('bluebird');
+const _ = require('lodash');
+const {Git} = require('../../src/git');
+const {PullRequest} = require('../../src/github');
+const {findOwners} = require('../../src/owner');
+const express = require('express');
 const config = require('../../config');
 const GITHUB_BOT_USERNAME = config.get('GITHUB_BOT_USERNAME');
 const GITHUB_REPO_DIR = config.get('GITHUB_REPO_DIR');

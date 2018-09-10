@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as path from 'path';
+const path = require('path');
 
 /**
  * Represents the File that has been changed from the repository.

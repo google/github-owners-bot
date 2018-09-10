@@ -1,12 +1,16 @@
 {
   "parser": "babel-eslint",
-  "ecmaFeatures": {
-    "modules": true,
-    "arrowFunctions": true,
-    "blockBindings": true,
-    "forOf": false,
-    "destructuring": true,
-    "spread": true
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "modules": true,
+      "arrowFunctions": true,
+      "blockBindings": true,
+      "forOf": false,
+      "destructuring": true,
+      "spread": true
+    }
   },
   "env": {
     "es6": true,

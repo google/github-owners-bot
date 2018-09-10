@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {RepoFile} from './repo-file';
+const {RepoFile} = require('./repo-file');
 const config = require('../config');
-import * as bb from 'bluebird';
-import * as _ from 'lodash';
+const bb = require('bluebird');
+const _ = require('lodash');
 
 const request = bb.promisify(require('request'));
 const GITHUB_ACCESS_TOKEN = config.get('GITHUB_ACCESS_TOKEN');

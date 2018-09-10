@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import * as path from 'path';
-import {RepoFile} from './repo-file';
+const path = require('path');
 
 /**
  * @fileoverview Contains classes and functions in relation to "OWNER" files
@@ -58,7 +57,7 @@ export class Owner {
  */
 export function findOwners(files, ownersMap) {
   const fileOwners = Object.create(null);
-  files.forEach((file) => {
+  files.forEach(file => {
     const owner = findClosestOwnersFile(file, ownersMap);
     if (!fileOwners[owner.dirname]) {
       fileOwners[owner.dirname] = {
