@@ -2,7 +2,7 @@ language: node_js
 sudo: required  # See http://docs.travis-ci.com/user/trusty-ci-environment/
 dist: trusty
 node_js:
-  - "lts/*"
+  - "10.10.0"
 script:
   - node_modules/gulp/bin/gulp.js test
 cache:

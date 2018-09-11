@@ -6,7 +6,7 @@
   "repository": "http://github.com/ampproject/github-owners-bot",
   "description": "A web service that suggests approvers for a GitHub pull request based on OWNERS files and enforces reviews by OWNERS as a GitHub status check.",
   "engines": {
-    "node": "^8.0.0",
+    "node": "10.10.0",
     "yarn": "^1.3.2"
   },
   "scripts": {
