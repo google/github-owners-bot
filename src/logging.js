@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/* @flow */
-
 const winston = require('winston');
 const expressWinston = require('express-winston');
 

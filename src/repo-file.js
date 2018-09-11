@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-/* @flow */
-
-import * as path from 'path';
+const path = require('path');
 
 /**
  * Represents the File that has been changed from the repository.
  * This is hydrated from the github pull request api.
  */
 export class RepoFile {
-  path: string;
-  dirname: string;
 
-  constructor(filePath: string) {
+  constructor(filePath) {
     // We want it have the leading ./ to evaluate `.` later on
-    /** @type {string} */
     this.path = /^\./.test(filePath) ? filePath : `.${path.sep}${filePath}`;
     this.dirname = path.dirname(this.path);
   }

@@ -16,12 +16,12 @@
 
 /* @flow */
 
-import * as bb from 'bluebird';
-import * as _ from 'lodash';
-import {Git} from '../../src/git';
-import {PullRequest} from '../../src/github';
-import {findOwners} from '../../src/owner';
-import * as express from 'express';
+const bb = require('bluebird');
+const _ = require('lodash');
+const {Git} = require('../../src/git');
+const {PullRequest} = require('../../src/github');
+const {findOwners} = require('../../src/owner');
+const express = require('express');
 const config = require('../../config');
 const GITHUB_BOT_USERNAME = config.get('GITHUB_BOT_USERNAME');
 const GITHUB_REPO_DIR = config.get('GITHUB_REPO_DIR');
@@ -34,14 +34,14 @@ export const router = express.Router();
 
 const git = new Git();
 
-const prActionTypes: string[] = [
+const prActionTypes = [
   'opened',
   'reopened',
   'created',
   'synchronize',
 ];
 
-function getOwners(pr: PullRequest) : Promise<FileOwners> {
+function getOwners(pr) {
   return git.pullLatestForRepo(GITHUB_REPO_DIR, 'origin', 'master').then(() => {
     const promises = bb.all([
       pr.getFiles(),
@@ -55,7 +55,7 @@ function getOwners(pr: PullRequest) : Promise<FileOwners> {
   });
 }
 
-function verifySignature(body: string, signature: string): bool {
+function verifySignature(body, signature) {
   try {
     const hash = 'sha1=' + crypto.createHmac('sha1', SECRET_TOKEN)
         .update(body).digest('hex');
@@ -67,7 +67,7 @@ function verifySignature(body: string, signature: string): bool {
 
 router.post('/', index);
 
-export function index(req: Object, res: Object) {
+export function index(req, res) {
   const signature = req.get('X-Hub-Signature') || '';
   // FIX: since we need to convert back to a string, maybe disable
   // the json body parser and parse it ourselves.
@@ -117,7 +117,7 @@ export function index(req: Object, res: Object) {
   });
 }
 
-function maybePostComment(prInfo: PullRequestInfo): Promise<*> {
+function maybePostComment(prInfo) {
   const {pr, fileOwners} = prInfo;
   // If all approvals are still not met, do we need to submit a new post?
   return pr.getLastApproversList(GITHUB_BOT_USERNAME).then(reviewers => {
@@ -144,7 +144,7 @@ function maybePostComment(prInfo: PullRequestInfo): Promise<*> {
   });
 }
 
-function getPullRequestInfo(pr: PullRequest): Promise<PullRequestInfo> {
+function getPullRequestInfo(pr) {
   return getOwners(pr).then(fileOwners => {
     return pr.getUniqueReviews().then(reviews => {
       const approvalsMet = pr.areAllApprovalsMet(fileOwners, reviews);
@@ -153,8 +153,7 @@ function getPullRequestInfo(pr: PullRequest): Promise<PullRequestInfo> {
   });
 }
 
-function processPullRequest(body: Object,
-    pr: PullRequest): Promise<*> {
+function processPullRequest(body, pr) {
   return getPullRequestInfo(pr).then(prInfo => {
     const {approvalsMet} = prInfo;
     // Newly created
@@ -170,7 +169,7 @@ function processPullRequest(body: Object,
   });
 }
 
-function openedAction(prInfo: PullRequestInfo): Promise<*> {
+function openedAction(prInfo) {
   const {pr, fileOwners, approvalsMet} = prInfo;
   if (approvalsMet) {
     return prInfo.pr.setApprovedStatus();

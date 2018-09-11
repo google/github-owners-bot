@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-/* @flow */
-
-import {Owner, createOwnersMap} from './owner';
+const {Owner, createOwnersMap} = require('./owner');
 const bb = require('bluebird');
 const child_process = require('child_process');
 const yaml = require('yamljs');
@@ -24,7 +22,7 @@ const path = require('path');
 const exec = bb.promisify(child_process.exec);
 const fs = bb.promisifyAll(require('fs'));
 
-function yamlReader(str: string): mixed[] {
+function yamlReader(str) {
   return yaml.parse(str);
 }
 
@@ -32,8 +30,7 @@ function yamlReader(str: string): mixed[] {
  * Reads the actual OWNER file on the file system and parses it using the
  * passed in `formatReader` and returns an `OwnersMap`.
  */
-function ownersParser(formatReader: (str: string) => mixed[],
-    pathToRepoDir: string, ownersPaths: string[]): OwnersMap {
+function ownersParser(formatReader, pathToRepoDir, ownersPaths) {
   const promises = ownersPaths.map(ownerPath => {
     const fullPath = path.resolve(pathToRepoDir, ownerPath);
     return fs.readFileAsync(fullPath).then(file => {
@@ -48,8 +45,7 @@ export class Git {
   /**
    * Retrieves all the OWNERS paths inside a repository.
    */
-  getOwnersFilesForBranch(author: string, dirPath: string,
-      targetBranch: string): OwnersMap {
+  getOwnersFilesForBranch(author, dirPath, targetBranch) {
     // NOTE: for some reason `git ls-tree --full-tree -r HEAD **/OWNERS*
     // doesn't work from here.
     return exec(`cd ${dirPath} && git checkout ${targetBranch} ` +
@@ -68,13 +64,12 @@ export class Git {
    * cd's into an assumed git directory on the file system and does a hard
    * reset to the remote branch.
    */
-  pullLatestForRepo(dirPath: string, remote: string,
-      branch: string) : Promise<string[]> {
+  pullLatestForRepo(dirPath, remote, branch) {
     return exec(`cd ${dirPath} && git fetch ${remote} ${branch} && ` +
         `git checkout -B ${branch} ${remote}/${branch}`);
   }
 }
 
-function stdoutToArray(res: string): string[] {
+function stdoutToArray(res) {
   return res.split('\n').filter(x => !!x);
 }

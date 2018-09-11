@@ -1,4 +1,4 @@
 {
-  "plugins": ["transform-flow-strip-types"],
-  "presets": ["es2015-loose"]
+  "plugins": [],
+  "presets": ["@babel/preset-env"]
 }

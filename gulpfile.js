@@ -23,7 +23,7 @@ const sources = ['{app,config}.js', '{src,routes}/**/*.js'];
 
 const tests = ['tests/**/{test,test-*}.js'];
 
-gulp.task('default', ['flow', 'lint', 'babel']);
+gulp.task('default', ['lint', 'babel']);
 
 gulp.task('babel', () => {
   return gulp.src(sources)
@@ -33,18 +33,6 @@ gulp.task('babel', () => {
 
 gulp.task('test', () => {
   return gulp.src(tests).pipe($$.ava({verbose: true, timeout: '15s'}));
-});
-
-gulp.task('flow', () => {
-  return gulp.src(sources)
-    .pipe($$.flowtype({
-        all: false,
-        weak: false,
-        declarations: './declarations',
-        killFlow: false,
-        beep: true,
-        abort: false
-    }));
 });
 
 gulp.task('lint', () => {

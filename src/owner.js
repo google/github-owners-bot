@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-/* @flow */
-
-import * as path from 'path';
-import {RepoFile} from './repo-file';
+const path = require('path');
 
 /**
  * @fileoverview Contains classes and functions in relation to "OWNER" files
@@ -29,14 +26,7 @@ import {RepoFile} from './repo-file';
  */
 export class Owner {
 
-  path: string;
-  dirname: string;
-  fullpath: string;
-  score: number;
-  dirOwners: string[];
-  fileOwners: Object;
-
-  constructor(config: any, pathToRepoDir: string, filePath: string) {
+  constructor(config, pathToRepoDir, filePath) {
     // We want it have the leading ./ to evaluate `.` later on
     this.path = /^\./.test(filePath) ? filePath : `.${path.sep}${filePath}`;
     this.dirname = path.dirname(this.path);
@@ -48,7 +38,7 @@ export class Owner {
     this.parseConfig_(config);
   }
 
-  parseConfig_(config: any) {
+  parseConfig_(config) {
     config.forEach(entry => {
       if (typeof entry === 'string') {
         this.dirOwners.push(entry);
@@ -65,16 +55,15 @@ export class Owner {
  * of files. It first tries to find the interection across the files and if
  * there are none it will return the union across usernames.
  */
-export function findOwners(files: RepoFile[],
-    ownersMap: OwnersMap): FileOwners {
-  const fileOwners: FileOwners = Object.create(null);
-  files.forEach((file : RepoFile) => {
+export function findOwners(files, ownersMap) {
+  const fileOwners = Object.create(null);
+  files.forEach(file => {
     const owner = findClosestOwnersFile(file, ownersMap);
     if (!fileOwners[owner.dirname]) {
-      fileOwners[owner.dirname] = ({
+      fileOwners[owner.dirname] = {
         owner,
         files: [file],
-      } : FileOwner);
+      };
     } else {
       fileOwners[owner.dirname].files.push(file);
     }
@@ -87,8 +76,7 @@ export function findOwners(files: RepoFile[],
  * in the repo, we simulate a folder traversal by splitting the path and
  * finding the closest OWNER file for a RepoFile.
  */
-export function findClosestOwnersFile(file: RepoFile,
-    ownersMap: OwnersMap): Owner {
+export function findClosestOwnersFile(file, ownersMap) {
   let dirname = file.dirname;
   let owner = ownersMap[dirname];
   const dirs = dirname.split(path.sep);
@@ -100,8 +88,8 @@ export function findClosestOwnersFile(file: RepoFile,
   return owner;
 }
 
-export function createOwnersMap(owners: Owner[]): OwnersMap {
-  return owners.reduce((ownersMap: OwnersMap, owner: Owner) => {
+export function createOwnersMap(owners) {
+  return owners.reduce((ownersMap, owner) => {
     if (owner.dirOwners.length) {
       ownersMap[owner.dirname] = owner;
     }

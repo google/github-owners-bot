@@ -22,13 +22,13 @@ const fs = require('fs');
 
 let pr, sandbox;
 const payload = JSON.parse(fs.readFileSync(
-    'fixtures/overlapping-comments.json'));
+    __dirname + '/fixtures/overlapping-comments.json'));
 const issuesPayload = JSON.parse(
     fs.readFileSync(
-    'fixtures/overlapping-comments-issues.json'));
+    __dirname + '/fixtures/overlapping-comments-issues.json'));
 const pullsPayload = JSON.parse(
     fs.readFileSync(
-    'fixtures/overlapping-comments-pulls.json'));
+    __dirname + '/fixtures/overlapping-comments-pulls.json'));
 
 test.beforeEach(() => {
   sandbox = sinon.sandbox.create();

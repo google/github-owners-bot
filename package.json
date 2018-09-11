@@ -6,25 +6,22 @@
   "repository": "http://github.com/ampproject/github-owners-bot",
   "description": "A web service that suggests approvers for a GitHub pull request based on OWNERS files and enforces reviews by OWNERS as a GitHub status check.",
   "engines": {
-    "node": "6.9.1"
+    "node": "10.10.0",
+    "yarn": "^1.3.2"
   },
   "scripts": {
     "start": "node dist/app.js",
     "monitor": "nodemon app.js",
     "deploy": "gcloud app deploy app.yaml",
-    "test": "ava",
-    "flow": "flow; test $? -eq 0 -o $? -eq 2"
+    "test": "ava"
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@google/cloud-debug": "0.8.3",
-    "@google/cloud-trace": "0.5.5",
     "bluebird": "3.4.6",
     "body-parser": "1.15.2",
     "express": "4.14.0",
     "express-session": "1.14.0",
     "express-winston": "2.0.0",
-    "gcloud": "0.37.0",
     "lodash": "4.17.4",
     "nconf": "0.8.4",
     "request": "2.74.0",
@@ -32,21 +29,21 @@
     "yamljs": "0.2.8"
   },
   "devDependencies": {
-    "babel-eslint": "7.0.0",
-    "babel-plugin-transform-flow-strip-types": "6.14.0",
-    "babel-preset-es2015-loose": "8.0.0",
+    "@babel/core": "7.0.0",
+    "@babel/preset-env": "7.0.0",
+    "@babel/register": "7.0.0",
+    "@google-cloud/debug-agent": "2.6.0",
+    "@google-cloud/trace-agent": "3.1.1",
+    "babel-eslint": "8",
     "del": "2.2.2",
-    "eslint": "^3.13.1",
-    "eslint-plugin-ava": "4.2.0",
-    "flow": "0.2.3",
-    "flow-bin": "0.40.0",
+    "eslint": "4.x",
+    "eslint-plugin-ava": "5.1.1",
     "gulp": "3.9.1",
-    "gulp-ava": "0.14.1",
-    "gulp-babel": "6.1.2",
-    "gulp-batch": "^1.0.5",
+    "gulp-ava": "0.19.0",
+    "gulp-babel": "8.0.0-beta.2",
+    "gulp-batch": "1.0.5",
     "gulp-eslint": "3.0.1",
-    "gulp-flowtype": "1.0.0",
-    "gulp-if": "^2.0.2",
+    "gulp-if": "2.0.2",
     "gulp-load-plugins": "1.5.0",
     "gulp-watch": "4.3.11",
     "lazypipe": "1.0.1",
@@ -55,15 +52,14 @@
     "supertest": "3.0.0"
   },
   "ava": {
+    "require": [
+      "@babel/register"
+    ],
     "files": [
       "tests.dist/**/{test,test-*}.js"
     ],
     "concurrency": 5,
     "tap": false,
-    "failFast": true,
-    "require": [
-      "babel-register"
-    ],
-    "babel": "inherit"
+    "failFast": true
   }
 }
