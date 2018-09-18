@@ -117,17 +117,6 @@ export class PullRequest {
     });
   }
 
-  postIssuesComment(body) {
-    return request({
-      url: `https://api.github.com/repos/${this.project}/${this.repo}/issues/` +
-          `${this.id}/comments`,
-      json: true,
-      method: 'POST',
-      headers: this.getPostHeaders_(),
-      body: {'body': body},
-    });
-  }
-
   getCommentsByAuthor(author) {
     return this.getComments().then(comments => {
       return comments.filter(x => x.author === author);
@@ -148,95 +137,12 @@ export class PullRequest {
     }, headers);
   }
 
-  setStatus(body) {
-    return request({
-      url: this.statusesUrl,
-      json: true,
-      method: 'POST',
-      headers: this.getPostHeaders_(),
-      body,
-    });
-  }
-
-  setApprovedStatus() {
-    return this.setStatus({
-      state: 'success',
-      target_url: 'https://www.ampproject.org',
-      description: 'full approvals met.',
-      context: 'ampproject/owners-bot',
-    });
-  }
-
-  setFailureStatus() {
-    return this.setStatus({
-      state: 'success',
-      target_url: 'https://www.ampproject.org',
-      description: 'missing full approvals.',
-      context: 'ampproject/owners-bot',
-    });
-  }
-
-  areAllApprovalsMet(fileOwners, reviews) {
-    const reviewersWhoApproved = reviews.filter(x => {
-      return x.state == 'approved';
-    }).map(x => x.username);
-    // If you're the author, then you yourself are assume to approve your own
-    // PR.
-    reviewersWhoApproved.push(this.author);
-
-    return Object.keys(fileOwners).every(path => {
-      const fileOwner = fileOwners[path];
-      const owner = fileOwner.owner;
-      _.intersection(owner.dirOwners, reviewersWhoApproved);
-      return _.intersection(owner.dirOwners, reviewersWhoApproved).length > 0;
-    });
-  }
-
   isBotAuthor() {
     return this.author == GITHUB_BOT_USERNAME;
   }
 
-  getLastApproversList(author) {
-    return this.getCommentsByAuthor(author).then(comments => {
-      comments = comments.slice(0).sort((a, b) => b.updatedAt - a.updatedAt);
-      for (let i = 0; i < comments.length; i++) {
-        const comment = comments[i];
-        // Split by line, then remove empty lines.
-        const lines = comment.body.split('\n').filter(x => !!x);
-        // Now find the line that has a /to at the beginning.
-        const approversList = lines.filter(x => /^\/to /.test(x));
-        if (approversList.length) {
-          return approversList.map(approvers => {
-            return approvers.replace(/^\/to /, '').split(' ')
-                .map(x => {
-                  if (x.charAt(0) == '@') {
-                    return x.slice(1);
-                  }
-                  return x;
-                }).sort();
-          });
-        }
-      }
-      return [];
-    });
-  }
+  setReviewers() {
 
-  composeBotComment(fileOwners) {
-    let comment = 'Hi, ampproject bot here! Here are a list of the owners ' +
-        'that can approve your files.\n\nYou may leave an issue comment ' +
-        `stating "@${GITHUB_BOT_USERNAME} retry!" to force me to re-evaluate ` +
-        'this Pull Request\'s status\n\n';
-    Object.keys(fileOwners).sort().forEach(key => {
-      const fileOwner = fileOwners[key];
-      const owner = fileOwner.owner;
-      // Slice from char 2 to remove the ./ prefix normalization
-      const files = fileOwner.files.map(x => `- ${x.path.slice(2)}`).join('\n');
-      const usernames = '/to ' + owner.dirOwners.join(' ') + '\n';
-      comment += usernames + files + '\n\n';
-    });
-    comment += '\n\nFor any issues please file a bug at ' +
-        'https://github.com/google/github-owners-bot/issues';
-    return comment;
   }
 
   static fetch(url) {

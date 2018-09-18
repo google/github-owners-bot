@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-/* @flow */
-
 const path = require('path');
 const nconf = module.exports = require('nconf');
 
