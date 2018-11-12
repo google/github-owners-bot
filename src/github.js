@@ -61,10 +61,12 @@ export class PullRequest {
     this.reviewersUrl = `${json.url}/reviews`;
   }
 
+
   /**
    * Retrieves the pull request json payload from the github API
    * and pulls out the files that have been changed in any way
    * and returns type RepoFile[].
+   * @return {!Promise<!Array<!RepoFile>>}
    */
   getFiles() {
     return request({
@@ -79,6 +81,9 @@ export class PullRequest {
     });
   }
 
+  /**
+   * @return {!Promise<!Array<!Review>>}
+   */
   getReviews() {
     const reviewsHeaders = Object.assign({},
         headers,
@@ -101,6 +106,9 @@ export class PullRequest {
     });
   }
 
+  /**
+   * @return {!Promise<!Array<!Review>>}
+   */
   getUniqueReviews() {
     return this.getReviews().then(reviews => {
       // This should always pick out the first instance.
@@ -108,37 +116,13 @@ export class PullRequest {
     });
   }
 
-  getComments() {
-    return bb.all([
-      this.getCommentByType_('pulls'),
-      this.getCommentByType_('issues'),
-    ]).then(([issues, pulls]) => {
-      return [...issues, ...pulls].map(x => new PullRequestComment(x));
-    });
-  }
-
-  getCommentsByAuthor(author) {
-    return this.getComments().then(comments => {
-      return comments.filter(x => x.author === author);
-    });
-  }
-
-  getCommentByType_(type) {
-    return request({
-      url: `https://api.github.com/repos/${this.project}/${this.repo}/` +
-          `${type}/${this.id}/comments`,
-      method: 'GET', qs, headers,
-    }).then(res => JSON.parse(res.body));
-  }
-
+  /**
+   * @return {!Object<string>}
+   */
   getPostHeaders_() {
     return Object.assign({
       'Authorization': `token ${GITHUB_ACCESS_TOKEN}`,
     }, headers);
-  }
-
-  isBotAuthor() {
-    return this.author == GITHUB_BOT_USERNAME;
   }
 
   setReviewers() {

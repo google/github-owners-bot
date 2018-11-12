@@ -38,9 +38,9 @@ test.beforeEach(() => {
   pr = new PullRequest(payload.pull_request);
 });
 
-test('find the approvers comment', t => {
+test('get approvers', t => {
   t.plan(1);
-  return pr.getLastApproversList('ampprojectbot').then(approvers => {
+  return pr.getApprovers('ampprojectbot').then(approvers => {
     t.deepEqual(approvers, [['donttrustthisbot'], ['person1', 'person2']]);
   });
 });
