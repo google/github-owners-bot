@@ -21,7 +21,6 @@ const _ = require('lodash');
 
 const request = bb.promisify(require('request'));
 const GITHUB_ACCESS_TOKEN = config.get('GITHUB_ACCESS_TOKEN');
-const GITHUB_BOT_USERNAME = config.get('GITHUB_BOT_USERNAME');
 
 const headers = {
   'User-Agent': 'get-owners',
@@ -61,6 +60,12 @@ export class PullRequest {
     this.reviewersUrl = `${json.url}/reviews`;
   }
 
+  /**
+   * Helper function to make it easier to stub/spy on requests
+   */
+  request_(config) {
+    return request(config);
+  }
 
   /**
    * Retrieves the pull request json payload from the github API
@@ -69,7 +74,7 @@ export class PullRequest {
    * @return {!Promise<!Array<!RepoFile>>}
    */
   getFiles() {
-    return request({
+    return this.request_({
       url: `https://api.github.com/repos/${this.project}/${this.repo}/pulls/` +
           `${this.id}/files`,
       method: 'GET',
@@ -82,6 +87,14 @@ export class PullRequest {
   }
 
   /**
+   * @param {!Array<string>}
+   * @return {!Promise}
+   */
+  setReviewers(reviewers) {
+    console.log(reviewers);
+  }
+
+  /**
    * @return {!Promise<!Array<!Review>>}
    */
   getReviews() {
@@ -89,7 +102,7 @@ export class PullRequest {
         headers,
         // Need to opt-into reviews API
         {'Accept': 'application/vnd.github.black-cat-preview+json'});
-    return request({
+    return this.request_({
       url: `https://api.github.com/repos/${this.project}/${this.repo}/pulls/` +
           `${this.id}/reviews`,
       method: 'GET',
@@ -125,8 +138,20 @@ export class PullRequest {
     }, headers);
   }
 
-  setReviewers() {
+  areAllApprovalsMet(fileOwners, reviews) {
+    const reviewersWhoApproved = reviews.filter(x => {
+      return x.state == 'approved';
+    }).map(x => x.username);
+    // If you're the author, then you yourself are assume to approve your own
+    // PR.
+    reviewersWhoApproved.push(this.author);
 
+    return Object.keys(fileOwners).every(path => {
+      const fileOwner = fileOwners[path];
+      const owner = fileOwner.owner;
+      _.intersection(owner.dirOwners, reviewersWhoApproved);
+      return _.intersection(owner.dirOwners, reviewersWhoApproved).length > 0;
+    });
   }
 
   static fetch(url) {

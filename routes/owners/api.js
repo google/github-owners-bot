@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-const bb = require('bluebird');
 const _ = require('lodash');
+const logging = require('../../src/logging').default;
 const {Git} = require('../../src/git');
+const {Owner} = require('../../src/owner');
 const {PullRequest} = require('../../src/github');
-const {findOwners} = require('../../src/owner');
 const express = require('express');
 const config = require('../../config');
-const GITHUB_REPO_DIR = config.get('GITHUB_REPO_DIR');
 const SECRET_TOKEN = config.get('SECRET_TOKEN');
 
 // Can't import * for crypto, this causes a deprecation warning
@@ -38,26 +37,6 @@ const prActionTypes = [
   'synchronize',
 ];
 
-function getOwners(pr) {
-  return git.pullLatestForRepo(GITHUB_REPO_DIR, 'origin', 'master').then(() => {
-    const promises = bb.all([
-      pr.getFiles(),
-      git.getOwnersFilesForBranch(pr.author, GITHUB_REPO_DIR, 'master'),
-    ]);
-    return promises.then(function(res) {
-      const files = res[0];
-      const ownersMap = res[1];
-      const owners = findOwners(files, ownersMap);
-      let usernames = Object.keys(owners).map(dirPath => {
-        return owners[dirPath].owner.dirOwners;
-      });
-      usernames = _.uniq(_.flatten(usernames));
-      console.log(usernames);
-      return usernames;
-    });
-  });
-}
-
 function verifySignature(body, signature) {
   try {
     const hash = 'sha1=' + crypto.createHmac('sha1', SECRET_TOKEN)
@@ -72,11 +51,13 @@ router.post('/', index);
 
 export function index(req, res) {
   const signature = req.get('X-Hub-Signature') || '';
-  // FIX: since we need to convert back to a string, maybe disable
-  // the json body parser and parse it ourselves.
-  if (process.env.NODE_ENV === 'production' &&
-      (!signature || !verifySignature(JSON.stringify(req.body), signature))) {
-    return res.status(500).send('Signature didn\'t match!');
+
+  // If its anything else besides "development" make sure to verify the
+  // signature.
+  if (process.env.NODE_ENV !== 'development') {
+    if (!signature || !verifySignature(JSON.stringify(req.body), signature)) {
+      return res.status(500).send('Signature didn\'t match!');
+    }
   }
 
   function ok() {
@@ -87,14 +68,57 @@ export function index(req, res) {
     return body && body.pull_request && prActionTypes.indexOf(body.action) > -1;
   }
 
-  const body = req.body;
-  let promise = Promise.resolve();
-  if (isPrAction(body)) {
-    const pr = new PullRequest(body.pull_request);
-    promise = getOwners(pr);
+  function isReviewAction() {
+    return body && body.review && body.pull_request &&
+        body.action == 'submitted';
   }
 
-  return promise.then(ok).catch(() => {
+  const body = req.body;
+  let promise = Promise.resolve();
+  // Monitor for pr actions (opened, reopened, created, synchronized) and
+  // a review action.
+  if (isPrAction(body) || isReviewAction(body)) {
+    const pr = new PullRequest(body.pull_request);
+    promise = processPullRequest(body, pr);
+  }
+
+  return promise.then(ok).catch(e => {
+    // Only allow debug logging of errors here if we're in development.
+    if (process.env.NODE_ENV === 'development') {
+      logging.debug(e.stack);
+    }
     res.status(500).send('Something went wrong!');
+  });
+}
+
+function processPullRequest(body, pr) {
+  return getPullRequestInfo(pr).then(prInfo => {
+    logging.debug('prInfo', prInfo);
+    if (body.action === 'opened') {
+      let reviewers = Object.keys(prInfo.fileOwners).map(ownerKey => {
+        return prInfo.fileOwners[ownerKey].owner.dirOwners;
+      });
+      reviewers = _.union(...reviewers);
+      return pr.setReviewers(reviewers);
+    }
+  });
+}
+
+/**
+ * @param {!PullRequest}
+ * @return {{
+ *   pr:!PullRequest,
+ *   fileOwners:!Object<string>,
+ *   reviews:!Array<Review>,
+ *   approvalsMet:boolean
+ * }}
+ */
+function getPullRequestInfo(pr) {
+  return Owner.getOwners(git, pr).then(fileOwners => {
+    return pr.getUniqueReviews().then(reviews => {
+      logging.debug('reviews', reviews);
+      const approvalsMet = pr.areAllApprovalsMet(fileOwners, reviews);
+      return {pr, fileOwners, reviews, approvalsMet};
+    });
   });
 }

@@ -22,25 +22,19 @@ const fs = require('fs');
 
 let pr, sandbox;
 const payload = JSON.parse(fs.readFileSync(
-    __dirname + '/fixtures/overlapping-comments.json'));
-const issuesPayload = JSON.parse(
-    fs.readFileSync(
-    __dirname + '/fixtures/overlapping-comments-issues.json'));
-const pullsPayload = JSON.parse(
-    fs.readFileSync(
-    __dirname + '/fixtures/overlapping-comments-pulls.json'));
+    __dirname + '/fixtures/opened.json'));
 
 test.beforeEach(() => {
   sandbox = sinon.sandbox.create();
-  const byType = sandbox.stub(PullRequest.prototype, 'getCommentByType_')
-  byType.withArgs('pulls').returns(Promise.resolve(pullsPayload));
-  byType.withArgs('issues').returns(Promise.resolve(issuesPayload));
   pr = new PullRequest(payload.pull_request);
 });
 
-test('get approvers', t => {
-  t.plan(1);
-  return pr.getApprovers('ampprojectbot').then(approvers => {
-    t.deepEqual(approvers, [['donttrustthisbot'], ['person1', 'person2']]);
-  });
+test('get reviewers', t => {
+  sandbox.stub(pr, 'request_').returns(Promise.resolve(
+
+  ));
+});
+
+test('unique reviewers', t => {
+
 });

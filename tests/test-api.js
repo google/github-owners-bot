@@ -31,10 +31,10 @@ test.afterEach(() => {
 // `afterEach` might not have ran yet when the next test does run.
 
 test.serial('on an opened pull request, it should set initial reviewers', t => {
-  t.plan(1);
+  t.plan(2);
   const openedPayload = JSON.parse(
       fs.readFileSync(
-      __dirname + '/fixtures/opened.json'));
+      __dirname + '/fixtures/opened-2.json'));
   const setReviewersStub = sandbox.stub(PullRequest.prototype, 'setReviewers')
       .returns(Promise.resolve());
 
@@ -43,6 +43,10 @@ test.serial('on an opened pull request, it should set initial reviewers', t => {
       .send(openedPayload)
       .then(() => {
         t.is(setReviewersStub.callCount, 1, 'Should call setReviewers');
+        t.deepEqual(setReviewersStub.getCall(0).args[0],
+          ['ampprojectbot', 'erwinmombay'],
+          'Should be called both erwinmombay and ampprojectbot'
+        )
       });
 });
 

@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "node dist/app.js",
-    "monitor": "nodemon app.js",
+    "monitor": "nodemon dist/app.js",
     "deploy": "gcloud app deploy app.yaml",
     "test": "ava"
   },
@@ -49,6 +49,7 @@
     "gulp-watch": "4.3.11",
     "lazypipe": "1.0.1",
     "minimist": "1.2.0",
+    "nodemon": "^1.18.6",
     "sinon": "1.17.6",
     "supertest": "3.0.0"
   },
