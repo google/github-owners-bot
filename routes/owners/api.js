@@ -99,6 +99,7 @@ function processPullRequest(body, pr) {
         return prInfo.fileOwners[ownerKey].owner.dirOwners;
       });
       reviewers = _.union(...reviewers);
+      logging.debug(reviewers);
       return pr.setReviewers(reviewers);
     }
   });

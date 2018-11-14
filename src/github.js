@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+const logging = require('./logging').default;
 const {RepoFile} = require('./repo-file');
 const config = require('../config');
 const bb = require('bluebird');
@@ -67,6 +68,10 @@ export class PullRequest {
     return request(config);
   }
 
+  onError_(e) {
+    logging.error(e.message);
+  }
+
   /**
    * Retrieves the pull request json payload from the github API
    * and pulls out the files that have been changed in any way
@@ -83,7 +88,7 @@ export class PullRequest {
     }).then(function(res) {
       const body = JSON.parse(res.body);
       return body.map(item => new RepoFile(item.filename));
-    });
+    }).catch(this.onError_);
   }
 
   /**
@@ -91,7 +96,19 @@ export class PullRequest {
    * @return {!Promise}
    */
   setReviewers(reviewers) {
-    console.log(reviewers);
+    const reviewsHeaders = Object.assign({},
+          this.getPostHeaders_(),
+          // Need to opt-into reviews API
+          {'Accept': 'application/vnd.github.symmetra-preview+json'});
+
+    return this.request_({
+      url: `https://api.github.com/repos/${this.project}/${this.repo}/pulls/` +
+          `${this.id}/requested_reviewers`,
+      method: 'POST',
+      qs,
+      headers: reviewsHeaders,
+      body: JSON.stringify({reviewers}),
+    }).catch(this.onError_);
   }
 
   /**
@@ -116,7 +133,7 @@ export class PullRequest {
         return b.submitted_at - a.submitted_at;
       });
       return reviews;
-    });
+    }).catch(this.onError_);
   }
 
   /**
@@ -126,7 +143,7 @@ export class PullRequest {
     return this.getReviews().then(reviews => {
       // This should always pick out the first instance.
       return _.uniqBy(reviews, 'username');
-    });
+    }).catch(this.onError_);
   }
 
   /**
@@ -140,7 +157,7 @@ export class PullRequest {
 
   areAllApprovalsMet(fileOwners, reviews) {
     const reviewersWhoApproved = reviews.filter(x => {
-      return x.state == 'approved';
+      return x.state === 'approved';
     }).map(x => x.username);
     // If you're the author, then you yourself are assume to approve your own
     // PR.
@@ -161,6 +178,8 @@ export class PullRequest {
     }).then(res => {
       const body = JSON.parse(res.body);
       return new PullRequest(body);
+    }).catch(e => {
+      logging.error(e.message);
     });
   }
 }
