@@ -111,6 +111,38 @@ export class PullRequest {
     }).catch(this.onError_);
   }
 
+  setStatus(body) {
+    return request({
+      url: this.statusesUrl,
+      json: true,
+      method: 'POST',
+      headers: this.getPostHeaders_(),
+      body,
+    });
+  }
+
+  setApprovedStatus(reviewers, approvalsMet) {
+    reviewers = reviewers.join(', ');
+    return this.setStatus({
+      state: 'success',
+      target_url: 'https://www.ampproject.org',
+      description: `approvals met: ${approvalsMet}. ${reviewers}`,
+      context: 'ampproject/owners-bot',
+    }).then(r => {
+      console.log(r.body);
+    });
+  }
+
+  setFailureStatus(reviewers, approvalsMet) {
+    reviewers = reviewers.join(', ');
+    return this.setStatus({
+      state: 'failure',
+      target_url: 'https://www.ampproject.org',
+      description: `approvals met: ${approvalsMet}. ${reviewers}`,
+      context: 'ampproject/owners-bot',
+    });
+  }
+
   /**
    * @return {!Promise<!Array<!Review>>}
    */

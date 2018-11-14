@@ -94,14 +94,17 @@ export function index(req, res) {
 function processPullRequest(body, pr) {
   return getPullRequestInfo(pr).then(prInfo => {
     logging.debug('prInfo', prInfo);
-    if (body.action === 'opened') {
-      let reviewers = Object.keys(prInfo.fileOwners).map(ownerKey => {
-        return prInfo.fileOwners[ownerKey].owner.dirOwners;
-      });
-      reviewers = _.union(...reviewers);
-      logging.debug(reviewers);
-      return pr.setReviewers(reviewers);
-    }
+    let reviewers = Object.keys(prInfo.fileOwners).map(ownerKey => {
+      return prInfo.fileOwners[ownerKey].owner.dirOwners;
+    });
+    reviewers = _.union(...reviewers);
+    logging.debug(reviewers);
+    // This call should be setReviewers. but for now we just want
+    // to monitor the list of reviewers on the status.
+    console.log('reviewers', reviewers);
+    return pr.setReviewers(reviewers).then(() => {
+      return pr.setApprovedStatus(reviewers, prInfo.approvalsMet);
+    });
   });
 }
 
