@@ -54,7 +54,7 @@ gulp.task('watch', function() {
 });
 
 gulp.task('watch:test', function() {
-  return $$.watch(tests, {ignoreInitial: false},
+  return $$.watch(tests.concat(sources), {ignoreInitial: false},
       $$.batch(function(events, done) {
         gulp.start('test', done);
       }));

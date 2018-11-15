@@ -22,6 +22,8 @@ const path = require('path');
 const exec = bb.promisify(child_process.exec);
 const fs = bb.promisifyAll(require('fs'));
 
+const matcher = /your branch is up-to-date|your branch is up to date/i;
+
 function yamlReader(str) {
   return yaml.parse(str);
 }
@@ -48,14 +50,15 @@ export class Git {
   getOwnersFilesForBranch(author, dirPath, targetBranch) {
     // NOTE: for some reason `git ls-tree --full-tree -r HEAD **/OWNERS*
     // doesn't work from here.
-    return exec(`cd ${dirPath} && git checkout ${targetBranch} ` +
+    const cmd = `cd ${dirPath} && git checkout ${targetBranch} ` +
         '&& git ls-tree --full-tree -r HEAD | ' +
-        'cut -f2 | grep OWNERS.yaml$')
+        'cut -f2 | grep OWNERS.yaml$';
+    return exec(cmd)
         .then(res => {
           // Construct the owners map.
           const ownersPaths = stdoutToArray(res)
             // Remove unneeded string. We only want the file paths.
-            .filter(x => !/your branch is up-to-date/i.test(x));
+            .filter(x => !(matcher.test(x)));
           return ownersParser(yamlReader, dirPath, ownersPaths, author);
         });
   }
@@ -65,8 +68,9 @@ export class Git {
    * reset to the remote branch.
    */
   pullLatestForRepo(dirPath, remote, branch) {
-    return exec(`cd ${dirPath} && git fetch ${remote} ${branch} && ` +
-        `git checkout -B ${branch} ${remote}/${branch}`);
+    const cmd = `cd ${dirPath} && git fetch ${remote} ${branch} && ` +
+        `git checkout -B ${branch} ${remote}/${branch}`;
+    return exec(cmd);
   }
 }
 

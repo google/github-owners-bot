@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
+const config = require('../config');
+const bb = require('bluebird');
 const path = require('path');
+const GITHUB_REPO_DIR = config.get('GITHUB_REPO_DIR');
 
 /**
  * @fileoverview Contains classes and functions in relation to "OWNER" files
@@ -42,11 +45,30 @@ export class Owner {
     config.forEach(entry => {
       if (typeof entry === 'string') {
         this.dirOwners.push(entry);
-      } else if (entry && entry['file-only']) {
-        // TODO(erwin): support file level entries. Finalize spec for it.
       }
     });
     this.dirOwners.sort();
+  }
+
+  /**
+   * @param {!Git} git
+   * @param {!PullRequest} pr
+   */
+  static getOwners(git, pr) {
+    // Update the local target repository of the latest from master
+    return git.pullLatestForRepo(GITHUB_REPO_DIR, 'origin', 'master')
+      .then(() => {
+        const promises = bb.all([
+          pr.getFiles(),
+          git.getOwnersFilesForBranch(pr.author, GITHUB_REPO_DIR, 'master'),
+        ]);
+        return promises.then(function(res) {
+          const files = res[0];
+          const ownersMap = res[1];
+          const owners = findOwners(files, ownersMap);
+          return owners;
+        });
+      });
   }
 }
 

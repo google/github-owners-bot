@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+const logging = require('./logging').default;
 const {RepoFile} = require('./repo-file');
 const config = require('../config');
 const bb = require('bluebird');
@@ -21,7 +22,6 @@ const _ = require('lodash');
 
 const request = bb.promisify(require('request'));
 const GITHUB_ACCESS_TOKEN = config.get('GITHUB_ACCESS_TOKEN');
-const GITHUB_BOT_USERNAME = config.get('GITHUB_BOT_USERNAME');
 
 const headers = {
   'User-Agent': 'get-owners',
@@ -62,12 +62,24 @@ export class PullRequest {
   }
 
   /**
+   * Helper function to make it easier to stub/spy on requests
+   */
+  request_(config) {
+    return request(config);
+  }
+
+  onError_(e) {
+    logging.error(e.message);
+  }
+
+  /**
    * Retrieves the pull request json payload from the github API
    * and pulls out the files that have been changed in any way
    * and returns type RepoFile[].
+   * @return {!Promise<!Array<!RepoFile>>}
    */
   getFiles() {
-    return request({
+    return this.request_({
       url: `https://api.github.com/repos/${this.project}/${this.repo}/pulls/` +
           `${this.id}/files`,
       method: 'GET',
@@ -76,15 +88,70 @@ export class PullRequest {
     }).then(function(res) {
       const body = JSON.parse(res.body);
       return body.map(item => new RepoFile(item.filename));
+    }).catch(this.onError_);
+  }
+
+  /**
+   * @param {!Array<string>}
+   * @return {!Promise}
+   */
+  setReviewers(reviewers) {
+    const reviewsHeaders = Object.assign({},
+          this.getPostHeaders_(),
+          // Need to opt-into reviews API
+          {'Accept': 'application/vnd.github.symmetra-preview+json'});
+
+    return this.request_({
+      url: `https://api.github.com/repos/${this.project}/${this.repo}/pulls/` +
+          `${this.id}/requested_reviewers`,
+      method: 'POST',
+      qs,
+      headers: reviewsHeaders,
+      body: JSON.stringify({reviewers}),
+    }).catch(this.onError_);
+  }
+
+  setStatus(body) {
+    return request({
+      url: this.statusesUrl,
+      json: true,
+      method: 'POST',
+      headers: this.getPostHeaders_(),
+      body,
     });
   }
 
+  setApprovedStatus(reviewers, approvalsMet) {
+    reviewers = reviewers.join(', ');
+    return this.setStatus({
+      state: 'success',
+      target_url: 'https://www.ampproject.org',
+      description: `approvals met: ${approvalsMet}. ${reviewers}`,
+      context: 'ampproject/owners-bot',
+    }).then(r => {
+      console.log(r.body);
+    });
+  }
+
+  setFailureStatus(reviewers, approvalsMet) {
+    reviewers = reviewers.join(', ');
+    return this.setStatus({
+      state: 'failure',
+      target_url: 'https://www.ampproject.org',
+      description: `approvals met: ${approvalsMet}. ${reviewers}`,
+      context: 'ampproject/owners-bot',
+    });
+  }
+
+  /**
+   * @return {!Promise<!Array<!Review>>}
+   */
   getReviews() {
     const reviewsHeaders = Object.assign({},
         headers,
         // Need to opt-into reviews API
         {'Accept': 'application/vnd.github.black-cat-preview+json'});
-    return request({
+    return this.request_({
       url: `https://api.github.com/repos/${this.project}/${this.repo}/pulls/` +
           `${this.id}/reviews`,
       method: 'GET',
@@ -98,87 +165,31 @@ export class PullRequest {
         return b.submitted_at - a.submitted_at;
       });
       return reviews;
-    });
+    }).catch(this.onError_);
   }
 
+  /**
+   * @return {!Promise<!Array<!Review>>}
+   */
   getUniqueReviews() {
     return this.getReviews().then(reviews => {
       // This should always pick out the first instance.
       return _.uniqBy(reviews, 'username');
-    });
+    }).catch(this.onError_);
   }
 
-  getComments() {
-    return bb.all([
-      this.getCommentByType_('pulls'),
-      this.getCommentByType_('issues'),
-    ]).then(([issues, pulls]) => {
-      return [...issues, ...pulls].map(x => new PullRequestComment(x));
-    });
-  }
-
-  postIssuesComment(body) {
-    return request({
-      url: `https://api.github.com/repos/${this.project}/${this.repo}/issues/` +
-          `${this.id}/comments`,
-      json: true,
-      method: 'POST',
-      headers: this.getPostHeaders_(),
-      body: {'body': body},
-    });
-  }
-
-  getCommentsByAuthor(author) {
-    return this.getComments().then(comments => {
-      return comments.filter(x => x.author === author);
-    });
-  }
-
-  getCommentByType_(type) {
-    return request({
-      url: `https://api.github.com/repos/${this.project}/${this.repo}/` +
-          `${type}/${this.id}/comments`,
-      method: 'GET', qs, headers,
-    }).then(res => JSON.parse(res.body));
-  }
-
+  /**
+   * @return {!Object<string>}
+   */
   getPostHeaders_() {
     return Object.assign({
       'Authorization': `token ${GITHUB_ACCESS_TOKEN}`,
     }, headers);
   }
 
-  setStatus(body) {
-    return request({
-      url: this.statusesUrl,
-      json: true,
-      method: 'POST',
-      headers: this.getPostHeaders_(),
-      body,
-    });
-  }
-
-  setApprovedStatus() {
-    return this.setStatus({
-      state: 'success',
-      target_url: 'https://www.ampproject.org',
-      description: 'full approvals met.',
-      context: 'ampproject/owners-bot',
-    });
-  }
-
-  setFailureStatus() {
-    return this.setStatus({
-      state: 'success',
-      target_url: 'https://www.ampproject.org',
-      description: 'missing full approvals.',
-      context: 'ampproject/owners-bot',
-    });
-  }
-
   areAllApprovalsMet(fileOwners, reviews) {
     const reviewersWhoApproved = reviews.filter(x => {
-      return x.state == 'approved';
+      return x.state === 'approved';
     }).map(x => x.username);
     // If you're the author, then you yourself are assume to approve your own
     // PR.
@@ -192,53 +203,6 @@ export class PullRequest {
     });
   }
 
-  isBotAuthor() {
-    return this.author == GITHUB_BOT_USERNAME;
-  }
-
-  getLastApproversList(author) {
-    return this.getCommentsByAuthor(author).then(comments => {
-      comments = comments.slice(0).sort((a, b) => b.updatedAt - a.updatedAt);
-      for (let i = 0; i < comments.length; i++) {
-        const comment = comments[i];
-        // Split by line, then remove empty lines.
-        const lines = comment.body.split('\n').filter(x => !!x);
-        // Now find the line that has a /to at the beginning.
-        const approversList = lines.filter(x => /^\/to /.test(x));
-        if (approversList.length) {
-          return approversList.map(approvers => {
-            return approvers.replace(/^\/to /, '').split(' ')
-                .map(x => {
-                  if (x.charAt(0) == '@') {
-                    return x.slice(1);
-                  }
-                  return x;
-                }).sort();
-          });
-        }
-      }
-      return [];
-    });
-  }
-
-  composeBotComment(fileOwners) {
-    let comment = 'Hi, ampproject bot here! Here are a list of the owners ' +
-        'that can approve your files.\n\nYou may leave an issue comment ' +
-        `stating "@${GITHUB_BOT_USERNAME} retry!" to force me to re-evaluate ` +
-        'this Pull Request\'s status\n\n';
-    Object.keys(fileOwners).sort().forEach(key => {
-      const fileOwner = fileOwners[key];
-      const owner = fileOwner.owner;
-      // Slice from char 2 to remove the ./ prefix normalization
-      const files = fileOwner.files.map(x => `- ${x.path.slice(2)}`).join('\n');
-      const usernames = '/to ' + owner.dirOwners.join(' ') + '\n';
-      comment += usernames + files + '\n\n';
-    });
-    comment += '\n\nFor any issues please file a bug at ' +
-        'https://github.com/google/github-owners-bot/issues';
-    return comment;
-  }
-
   static fetch(url) {
     return request({
       url,
@@ -246,6 +210,8 @@ export class PullRequest {
     }).then(res => {
       const body = JSON.parse(res.body);
       return new PullRequest(body);
+    }).catch(e => {
+      logging.error(e.message);
     });
   }
 }
