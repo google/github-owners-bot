@@ -29,12 +29,8 @@ test.beforeEach(() => {
   pr = new PullRequest(payload.pull_request);
 });
 
-test('get reviewers', t => {
-  sandbox.stub(pr, 'request_').returns(Promise.resolve(
-
-  ));
+test.skip('get reviewers', t => {
 });
 
-test('unique reviewers', t => {
-
+test.skip('unique reviewers', t => {
 });
