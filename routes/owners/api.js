@@ -101,10 +101,7 @@ function processPullRequest(body, pr) {
     logging.debug(reviewers);
     // This call should be setReviewers. but for now we just want
     // to monitor the list of reviewers on the status.
-    console.log('reviewers', reviewers);
-    return pr.setReviewers(reviewers).then(() => {
-      return pr.setApprovedStatus(reviewers, prInfo.approvalsMet);
-    });
+    return pr.setApprovedStatus(reviewers, prInfo.approvalsMet);
   });
 }
 
