@@ -34,8 +34,6 @@ if (process.env.NODE_ENV === 'production') {
 export const app = express();
 
 app.disable('etag');
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
 app.set('trust proxy', true);
 
 // Add the request logger before anything else so that it can
@@ -53,9 +51,6 @@ const sessionConfig = {
 
 app.use(session(sessionConfig));
 
-app.get('/', function(req, res) {
-  res.render('index.jade');
-});
 app.use('/api/get-owners', ownerRouter);
 
 // Our application will need to respond to health checks when running on
