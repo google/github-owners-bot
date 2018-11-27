@@ -20,14 +20,16 @@ import * as path from 'path';
 import * as bodyParser from 'body-parser';
 import logging from './src/logging';
 import {router as ownerRouter} from './routes/owners/api';
+const Datastore = require('@google-cloud/datastore');
 const config = require('./config');
 const express = require('express');
 const session = require('express-session');
+const DatastoreStore = require('@google-cloud/connect-datastore')(session);
 
 // Activate Google Cloud Trace and Debug when in production
 if (process.env.NODE_ENV === 'production') {
-  require('@google/cloud-trace').start();
-  require('@google/cloud-debug');
+  require('@google-cloud/trace-agent').start();
+  require('@google-cloud/debug-agent');
 }
 
 
@@ -47,6 +49,12 @@ const sessionConfig = {
   saveUninitialized: false,
   secret: config.get('SECRET'),
   signed: true,
+  store: new DatastoreStore({
+    dataset: DataStore({
+      prefix: 'express-sessions',
+      projectId: config.get('GCLOUD_PROJECT'),
+    }),
+  }),
 };
 
 app.use(session(sessionConfig));

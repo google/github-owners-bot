@@ -17,6 +17,8 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@google-cloud/connect-datastore": "^1.0.0",
+    "@google-cloud/datastore": "^2.0.0",
     "bluebird": "3.4.6",
     "body-parser": "1.15.2",
     "express": "4.14.0",
