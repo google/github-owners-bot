@@ -50,7 +50,7 @@ const sessionConfig = {
   secret: config.get('SECRET'),
   signed: true,
   store: new DatastoreStore({
-    dataset: DataStore({
+    dataset: Datastore({
       prefix: 'express-sessions',
       projectId: config.get('GCLOUD_PROJECT'),
     }),

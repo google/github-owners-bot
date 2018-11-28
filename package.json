@@ -18,7 +18,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@google-cloud/connect-datastore": "^1.0.0",
-    "@google-cloud/datastore": "2.0.0",
+    "@google-cloud/datastore": "0.6.0",
     "@google-cloud/debug-agent": "3.0.0",
     "@google-cloud/trace-agent": "3.3.1",
     "bluebird": "3.5.3",
