@@ -99,9 +99,11 @@ function processPullRequest(body, pr) {
     });
     reviewers = _.union(...reviewers);
     logging.debug(reviewers);
-    // This call should be setReviewers. but for now we just want
-    // to monitor the list of reviewers on the status.
-    return pr.setApprovedStatus(reviewers, prInfo.approvalsMet);
+    return pr.setReviewers(reviewers).then(() => {
+      // This call should be setReviewers. but for now we just want
+      // to monitor the list of reviewers on the status.
+      return pr.setApprovedStatus(reviewers, prInfo.approvalsMet);
+    });
   });
 }
 
