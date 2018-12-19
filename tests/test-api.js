@@ -50,7 +50,7 @@ test.serial('on an opened pull request, it should set initial reviewers', t => {
       });
 });
 
-test.serial('on an sync pull request, it should not set reviewers', t => {
+test.serial('on a sync pull request, it should not set reviewers', t => {
   t.plan(1);
   const openedPayload = JSON.parse(
       fs.readFileSync(
