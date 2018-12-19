@@ -50,6 +50,22 @@ test.serial('on an opened pull request, it should set initial reviewers', t => {
       });
 });
 
+test.serial('on an sync pull request, it should not set reviewers', t => {
+  t.plan(1);
+  const openedPayload = JSON.parse(
+      fs.readFileSync(
+      __dirname + '/fixtures/sync.json'));
+  const setReviewersStub = sandbox.stub(PullRequest.prototype, 'setReviewers')
+      .returns(Promise.resolve());
+
+  return request(app).post('/api/get-owners')
+      .set('Content-Type', 'application/json')
+      .send(openedPayload)
+      .then(() => {
+        t.is(setReviewersStub.callCount, 0, 'Should not call setReviewers');
+      });
+});
+
 } else {
 
   test('to appease ava', t => {
