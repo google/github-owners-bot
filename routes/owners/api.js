@@ -68,7 +68,7 @@ export function index(req, res) {
     return body && body.pull_request && prActionTypes.indexOf(body.action) > -1;
   }
 
-  function isReviewAction() {
+  function isReviewAction(body) {
     return body && body.review && body.pull_request &&
         body.action == 'submitted';
   }
@@ -79,7 +79,7 @@ export function index(req, res) {
   // a review action.
   if (isPrAction(body) || isReviewAction(body)) {
     const pr = new PullRequest(body.pull_request);
-    promise = processPullRequest(body, pr);
+    promise = processPullRequest(body, pr, body.action);
   }
 
   return promise.then(ok).catch(e => {
@@ -91,7 +91,7 @@ export function index(req, res) {
   });
 }
 
-function processPullRequest(body, pr) {
+function processPullRequest(body, pr, actionType) {
   return getPullRequestInfo(pr).then(prInfo => {
     logging.debug('prInfo', prInfo);
     let reviewers = Object.keys(prInfo.fileOwners).map(ownerKey => {
@@ -99,9 +99,15 @@ function processPullRequest(body, pr) {
     });
     reviewers = _.union(...reviewers);
     logging.debug(reviewers);
-    // This call should be setReviewers. but for now we just want
-    // to monitor the list of reviewers on the status.
-    return pr.setApprovedStatus(reviewers, prInfo.approvalsMet);
+    let promise = pr.setApprovedStatus(reviewers, prInfo.approvalsMet);
+
+    // Temporarily only do it for opened types
+    if (actionType === 'opened') {
+      promise = promise.then(() => {
+        return pr.setReviewers(reviewers)
+      });
+    }
+    return promise;
   });
 }
 
