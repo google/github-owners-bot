@@ -84,9 +84,8 @@ export function index(req, res) {
 
   return promise.then(ok).catch(e => {
     // Only allow debug logging of errors here if we're in development.
-    if (process.env.NODE_ENV === 'development') {
-      logging.debug(e.stack);
-    }
+    console.log(e.stack);
+    logging.debug(e.stack);
     res.status(500).send('Something went wrong!');
   });
 }
@@ -99,12 +98,18 @@ function processPullRequest(body, pr, actionType) {
     });
     reviewers = _.union(...reviewers);
     logging.debug(reviewers);
-    let promise = pr.setApprovedStatus(reviewers, prInfo.approvalsMet);
+    //let promise = pr.setApprovedStatus(reviewers, prInfo.approvalsMet);
+    let promise = pr.getCheckRun();
 
     // Temporarily only do it for opened types
     if (actionType === 'opened') {
-      promise = promise.then(() => {
-        return pr.setReviewers(reviewers)
+      promise = promise.then((resp) => {
+        //console.log('respo', resp);
+        //const hasCheckRun = resp && resp.total_count ? 'PATCH' : 'POST';
+        //if (hasCheckRun) {
+          //return pr.setCheckRun(reviewers, prInfo.approvalsMet);
+        //}
+        //return pr.updateCheckRun();
       });
     }
     return promise;

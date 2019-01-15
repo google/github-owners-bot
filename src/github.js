@@ -101,9 +101,10 @@ export class PullRequest {
           // Need to opt-into reviews API
           {'Accept': 'application/vnd.github.symmetra-preview+json'});
 
+    const url = `https://api.github.com/repos/${this.project}/${this.repo}` +
+        `/pulls/${this.id}/requested_reviewers`;
     return this.request_({
-      url: `https://api.github.com/repos/${this.project}/${this.repo}/pulls/` +
-          `${this.id}/requested_reviewers`,
+      url,
       method: 'POST',
       qs,
       headers: reviewsHeaders,
