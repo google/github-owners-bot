@@ -144,6 +144,66 @@ export class PullRequest {
     });
   }
 
+  setCheckRun(reviewers, approvalsMet) {
+    const headers = Object.assign({},
+        this.getPostHeaders_(),
+        // Need to opt-into check run API
+        {'Accept': 'application/vnd.github.antiope-preview+json'});
+    const url = `https://api.github.com/repos/${this.project}/${this.repo}/` +
+        'check-runs';
+    return this.request_({
+      url,
+      method: 'POST',
+      headers,
+      json: true,
+      body: JSON.stringify({
+        name: 'owners approvals',
+        head_sha: this.headSha,
+        output: {
+          title: 'Required Owners for each file',
+          summary: 'this is a test'
+        }
+      })
+    });
+  }
+
+  updateCheckRun() {
+    const headers = Object.assign({},
+        this.getPostHeaders_(),
+        // Need to opt-into check run API
+        {'Accept': 'application/vnd.github.antiope-preview+json'});
+    const url = `https://api.github.com/repos/${this.project}/${this.repo}/` +
+        'check-runs';
+    return this.request_({
+      url,
+      method: 'PATCH',
+      json: true,
+      headers,
+      body: JSON.stringify({
+        name: 'owners approvals',
+        head_sha: this.headSha,
+        status: 'completed',
+        output: {
+          title: 'Required Owners for each file',
+          summary: 'this is a test'
+        }
+      })
+    });
+  }
+
+  getCheckRun() {
+    const headers = Object.assign({},
+        // Need to opt-into check run API
+        {'Accept': 'application/vnd.github.antiope-preview+json'},
+        defaultHeaders);
+
+    return this.request_({
+      headers,
+      json: true,
+      url: `https://api.github.com/repos/${this.project}/${this.repo}/commits/${this.headSha}/check-runs`
+    });
+  }
+
   /**
    * @return {!Promise<!Array<!Review>>}
    */
