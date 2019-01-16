@@ -104,7 +104,7 @@ function processPullRequest(body, pr, actionType) {
     // Temporarily only do it for opened types
     if (actionType === 'opened') {
       promise = promise.then(() => {
-        return pr.setReviewers(reviewers)
+        return pr.setReviewers(reviewers);
       });
     }
     return promise;

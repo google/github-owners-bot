@@ -16,7 +16,6 @@
 
 /* @flow */
 
-import * as path from 'path';
 import * as bodyParser from 'body-parser';
 import logging from './src/logging';
 import {router as ownerRouter} from './routes/owners/api';

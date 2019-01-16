@@ -23,8 +23,6 @@ const sources = ['{app,config}.js', '{src,routes}/**/*.js'];
 
 const tests = ['tests/**/{test,test-*}.js'];
 
-gulp.task('default', ['lint', 'babel']);
-
 gulp.task('babel', () => {
   return gulp.src(sources)
     .pipe($$.babel())
@@ -38,24 +36,23 @@ gulp.task('test', () => {
 gulp.task('lint', () => {
   return gulp.src(sources)
       .pipe($$.eslint())
-      .pipe($$.eslint.format())
-      .pipe($$.eslint.failAfterError());
+      .pipe($$.eslint.format());
 });
 
-gulp.task('clean', (cb) => {
-  return del(['dist'], cb);
+gulp.task('clean', (done) => {
+  return del(['dist'], done);
 });
 
-gulp.task('watch', function() {
-  return $$.watch(sources, {ignoreInitial: false},
-      $$.batch(function(events, done) {
-        gulp.start('default', done);
-      }));
+gulp.task('watch', (done) => {
+  return gulp.watch(sources, {ignoreInitial: false}, () => {
+    gulp.start('default', done);
+  });
 });
 
-gulp.task('watch:test', function() {
-  return $$.watch(tests.concat(sources), {ignoreInitial: false},
-      $$.batch(function(events, done) {
-        gulp.start('test', done);
-      }));
+gulp.task('watch:test', (done) => {
+  return gulp.watch(tests.concat(sources), {ignoreInitial: false}, () => {
+    gulp.start('test', done);
+  });
 });
+
+gulp.task('default', gulp.series(['lint', 'babel']));
