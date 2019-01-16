@@ -41,20 +41,18 @@ gulp.task('lint', () => {
       .pipe($$.eslint.format());
 });
 
-gulp.task('clean', (cb) => {
-  return del(['dist'], cb);
+gulp.task('clean', (done) => {
+  return del(['dist'], done);
 });
 
-gulp.task('watch', function() {
-  return $$.watch(sources, {ignoreInitial: false},
-      $$.batch(function(events, done) {
-        gulp.start('default', done);
-      }));
+gulp.task('watch', (done) => {
+  return gulp.watch(sources, {ignoreInitial: false}, () => {
+    gulp.start('default', done);
+  });
 });
 
-gulp.task('watch:test', function() {
-  return $$.watch(tests.concat(sources), {ignoreInitial: false},
-      $$.batch(function(events, done) {
-        gulp.start('test', done);
-      }));
+gulp.task('watch:test', (done) => {
+  return gulp.watch(tests.concat(sources), {ignoreInitial: false}, () => {
+    gulp.start('test', done);
+  });
 });
