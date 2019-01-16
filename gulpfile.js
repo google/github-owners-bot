@@ -23,8 +23,6 @@ const sources = ['{app,config}.js', '{src,routes}/**/*.js'];
 
 const tests = ['tests/**/{test,test-*}.js'];
 
-gulp.task('default', ['lint', 'babel']);
-
 gulp.task('babel', () => {
   return gulp.src(sources)
     .pipe($$.babel())
@@ -56,3 +54,5 @@ gulp.task('watch:test', (done) => {
     gulp.start('test', done);
   });
 });
+
+gulp.task('default', gulp.series(['lint', 'babel']));

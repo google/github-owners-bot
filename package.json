@@ -41,7 +41,7 @@
     "del": "2.2.2",
     "eslint": "4.x",
     "eslint-plugin-ava": "5.1.1",
-    "gulp": "3.9.1",
+    "gulp": "4.0.0",
     "gulp-ava": "1.0.0",
     "gulp-babel": "8.0.0",
     "gulp-eslint": "3.0.1",
