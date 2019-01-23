@@ -20,7 +20,7 @@ const path = require('path');
  * Represents the File that has been changed from the repository.
  * This is hydrated from the github pull request api.
  */
-export class RepoFile {
+class RepoFile {
 
   constructor(filePath) {
     // We want it have the leading ./ to evaluate `.` later on
@@ -28,3 +28,5 @@ export class RepoFile {
     this.dirname = path.dirname(this.path);
   }
 }
+
+module.exports = {RepoFile};

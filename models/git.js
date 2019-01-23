@@ -15,12 +15,12 @@
  */
 
 const {Owner, createOwnersMap} = require('./owner');
-const bb = require('bluebird');
 const child_process = require('child_process');
 const yaml = require('yamljs');
 const path = require('path');
-const exec = bb.promisify(child_process.exec);
-const fs = bb.promisifyAll(require('fs'));
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
+const fs = require('fs').promises;
 
 const matcher = /your branch is up-to-date|your branch is up to date/i;
 
@@ -32,35 +32,38 @@ function yamlReader(str) {
  * Reads the actual OWNER file on the file system and parses it using the
  * passed in `formatReader` and returns an `OwnersMap`.
  */
-function ownersParser(formatReader, pathToRepoDir, ownersPaths) {
+async function ownersParser(formatReader, pathToRepoDir, ownersPaths) {
   const promises = ownersPaths.map(ownerPath => {
     const fullPath = path.resolve(pathToRepoDir, ownerPath);
-    return fs.readFileAsync(fullPath).then(file => {
+    return fs.readFile(fullPath).then(file => {
       return new Owner(formatReader(file.toString()), pathToRepoDir, ownerPath);
     });
   });
-  return bb.all(promises).then(createOwnersMap);
+  return Promise.all(promises).then(createOwnersMap);
 }
 
-export class Git {
+class Git {
 
   /**
    * Retrieves all the OWNERS paths inside a repository.
    */
-  getOwnersFilesForBranch(author, dirPath, targetBranch) {
+  async getOwnersFilesForBranch(author, dirPath, targetBranch) {
     // NOTE: for some reason `git ls-tree --full-tree -r HEAD **/OWNERS*
     // doesn't work from here.
     const cmd = `cd ${dirPath} && git checkout ${targetBranch} ` +
         '&& git ls-tree --full-tree -r HEAD | ' +
         'cut -f2 | grep OWNERS.yaml$';
-    return exec(cmd)
-        .then(res => {
-          // Construct the owners map.
-          const ownersPaths = stdoutToArray(res)
-            // Remove unneeded string. We only want the file paths.
-            .filter(x => !(matcher.test(x)));
-          return ownersParser(yamlReader, dirPath, ownersPaths, author);
-        });
+    const {stdout, stderr} = await exec(cmd);
+    if (stderr) {
+      // TODO: Temporary
+      console.error(stderr);
+    }
+    console.log('getOwnersFilesForBranch', stdout);
+    // Construct the owners map.
+    const ownersPaths = stdoutToArray(stdout)
+      // Remove unneeded string. We only want the file paths.
+      .filter(x => !(matcher.test(x)));
+    return ownersParser(yamlReader, dirPath, ownersPaths, author);
   }
 
   /**
@@ -77,3 +80,5 @@ export class Git {
 function stdoutToArray(res) {
   return res.split('\n').filter(x => !!x);
 }
+
+module.exports = {Git};
