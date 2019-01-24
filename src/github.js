@@ -57,8 +57,6 @@ class PullRequest {
       return fileOwner.owner.dirOwners;
     });
     reviewers = _.union(...reviewers);
-    this.context.log.debug(reviewers);
-    this.context.log.debug('areApprovalsMet', prInfo.approvalsMet);
     const checkRuns = await this.getCheckRun();
     const hasCheckRun = this.hasCheckRun(checkRuns);
     const [checkRun] = checkRuns.check_runs
