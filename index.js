@@ -1,4 +1,4 @@
-const PullRequest = require('./models/github').PullRequest;
+const PullRequest = require('./src/github').PullRequest;
 
 module.exports = app => {
   app.on(['pull_request.opened'], pullRequest)

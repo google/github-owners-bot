@@ -19,7 +19,6 @@ const {Owner} = require('./owner');
 const {Git} = require('./git');
 const _ = require('lodash');
 
-const git = new Git();
 
 /**
  * Maps the github json payload to a simpler data structure.
@@ -27,6 +26,8 @@ const git = new Git();
 class PullRequest {
 
   constructor(context, pr) {
+
+    this.git = new Git(context);
     this.context = context;
     this.github = context.github;
 
@@ -58,17 +59,15 @@ class PullRequest {
     });
     reviewers = _.union(...reviewers);
     const checkRuns = await this.getCheckRun();
-    const hasCheckRun = this.hasCheckRun(checkRuns);
-    const [checkRun] = checkRuns.check_runs
-        .filter(x => x.head_sha === this.headSha);
+    const {hasCheckRun, checkRun} = this.hasCheckRun(checkRuns);
     if (hasCheckRun) {
-      this.updateCheckRun(checkRun, reviewers, prInfo.approvalsMet);
+      return this.updateCheckRun(checkRun, reviewers, prInfo.approvalsMet);
     }
     return this.createCheckRun(reviewers, prInfo.approvalsMet);
   }
 
   async getMeta() {
-    const fileOwners = await Owner.getOwners(git, this);
+    const fileOwners = await Owner.getOwners(this.git, this);
     const reviews = await this.getUniqueReviews();
     this.context.log.debug('[getMeta]', reviews);
     const approvalsMet = this.areAllApprovalsMet(fileOwners, reviews);
@@ -143,7 +142,7 @@ class PullRequest {
       completed_at: new Date(),
       output: {
         title: 'Probot check!',
-        summary: 'The check has passed!'
+        summary: 'The check has passed!',
       }
     }))
   }
@@ -159,6 +158,7 @@ class PullRequest {
   }
 
   async updateCheckRun(checkRun, reviewers, areApprovalsMet) {
+    this.context.log.debug('[updateCheckRun]', checkRun);
     this.github.checks.update({
       ...this.options,
       check_run_id: checkRun.id,
@@ -173,13 +173,16 @@ class PullRequest {
   }
 
   /**
-   * @return {boolean}
+   * @return {{hasChecRun: boolean, checkRun: !Object|undefined}}
    */
-  async hasCheckRun(checkRuns) {
-    this.context.log.debug('[hasCheckRun]', checkRuns);
-    return checkRuns.total_count > 0 && checkRuns.check_runs.some(x => {
+  hasCheckRun(checkRuns) {
+    const hasCheckRun = checkRuns.total_count > 0;
+    const checkRun = checkRuns.check_runs.filter(x => {
       return x.head_sha === this.headSha;
-    });
+    })[0];
+    const tuple = {hasCheckRun: hasCheckRun && !!checkRun, checkRun};
+    this.context.log.debug('[hasCheckRun]', tuple);
+    return tuple;
   }
 }
 

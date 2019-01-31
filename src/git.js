@@ -44,6 +44,10 @@ async function ownersParser(formatReader, pathToRepoDir, ownersPaths) {
 
 class Git {
 
+  constructor(context) {
+    this.context = context;
+  }
+
   /**
    * Retrieves all the OWNERS paths inside a repository.
    */
@@ -55,10 +59,10 @@ class Git {
         'cut -f2 | grep OWNERS.yaml$';
     const {stdout, stderr} = await exec(cmd);
     if (stderr) {
-      // TODO: Temporary
-      console.error(stderr);
+      // TODO: Usually stderr here might occur when branch is already master.
+      this.context.log.warn(['getOwnersFilesForBranch'], stderr);
     }
-    console.log('getOwnersFilesForBranch', stdout);
+    this.context.log.debug('[getOwnersFilesForBranch]', stdout);
     // Construct the owners map.
     const ownersPaths = stdoutToArray(stdout)
       // Remove unneeded string. We only want the file paths.

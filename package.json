@@ -12,7 +12,7 @@
     "dev": "nodemon",
     "start": "probot run ./index.js",
     "test": "jest",
-    "test:watch": "jest --watch --notify --notifyMode=change --coverage"
+    "test:watch": "jest --watch --notify --notifyMode=change"
   },
   "license": "Apache-2.0",
   "dependencies": {
