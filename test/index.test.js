@@ -31,7 +31,7 @@ describe('owners bot', () => {
   describe('create check run', () => {
 
     const stub = sinon.stub(Git.prototype, 'getOwnersFilesForBranch')
-      .returns(['erwinmombay'].join('\n'));
+      .returns(['erwinmombay', 'donttrustthisbot'].join('\n'));
 
     test('with failure check when there are 0 reviews on a pull request', async () => {
 
@@ -116,7 +116,7 @@ describe('owners bot', () => {
           return true;
         }).reply(200);
 
-      await probot.receive({event: 'pull_request', payload})
+      await probot.receive({event: 'pull_request', payload});
     });
   });
 
@@ -160,7 +160,7 @@ describe('owners bot', () => {
           return true;
         }).reply(200)
 
-      await probot.receive({event: 'pull_request', payload})
+      await probot.receive({event: 'pull_request', payload});
     });
   });
 

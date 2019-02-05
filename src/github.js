@@ -58,6 +58,7 @@ class PullRequest {
       return fileOwner.owner.dirOwners;
     });
     reviewers = _.union(...reviewers);
+    const text = this.buildCheckOutput(prInfo);
     const checkRuns = await this.getCheckRun();
     const {hasCheckRun, checkRun} = this.hasCheckRun(checkRuns);
     if (hasCheckRun) {
@@ -143,18 +144,9 @@ class PullRequest {
       output: {
         title: 'Probot check!',
         summary: 'The check has passed!',
+        text: 'wah',
       }
     }))
-  }
-
-  async getCheckRun() {
-    const res = await this.github.checks.listForRef({
-      owner: this.owner,
-      repo: this.repo,
-      ref: this.headRef,
-    });
-    this.context.log.debug('[getCheckRun]', res);
-    return res.data;
   }
 
   async updateCheckRun(checkRun, reviewers, areApprovalsMet) {
@@ -167,9 +159,20 @@ class PullRequest {
       completed_at: new Date(),
       output: {
         title: 'Probot check!',
-        summary: 'The check has passed!'
+        summary: 'The check has passed!',
+        text: 'wah',
       }
     })
+  }
+
+  async getCheckRun() {
+    const res = await this.github.checks.listForRef({
+      owner: this.owner,
+      repo: this.repo,
+      ref: this.headRef,
+    });
+    this.context.log.debug('[getCheckRun]', res);
+    return res.data;
   }
 
   /**
@@ -183,6 +186,11 @@ class PullRequest {
     const tuple = {hasCheckRun: hasCheckRun && !!checkRun, checkRun};
     this.context.log.debug('[hasCheckRun]', tuple);
     return tuple;
+  }
+
+  buildCheckOutput(prInfo) {
+    this.context.log.debug('prInfo');
+    this.context.log.debug(prInfo);
   }
 }
 
