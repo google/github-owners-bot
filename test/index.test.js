@@ -30,9 +30,6 @@ describe('owners bot', () => {
 
   describe('create check run', () => {
 
-    const stub = sinon.stub(Git.prototype, 'getOwnersFilesForBranch')
-      .returns(['erwinmombay', 'donttrustthisbot'].join('\n'));
-
     test('with failure check when there are 0 reviews on a pull request', async () => {
 
       nock('https://api.github.com')
@@ -59,24 +56,24 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
           expect(body).toMatchObject({
-            name: 'My app!',
+            name: 'AMP Owners bot',
             head_branch: payload.pull_request.head.ref,
             head_sha: payload.pull_request.head.sha,
             status: 'completed',
             conclusion: 'failure',
             output: {
-              title: 'Probot check!',
-              summary: 'The check has passed!',
+              title: 'AMP Owners bot check',
+              summary: 'The check was a failure!',
+              text: '# erwinmombay   - ./dir2/dir1/dir1/file.txt    ',
             }
           });
           return true;
         }).reply(200);
 
       await probot.receive({event: 'pull_request', payload});
-      stub.restore();
     });
 
-    test.skip('with passing check when author themselves are owners', async () => {
+    test('with passing check when author themselves are owners', async () => {
 
       nock('https://api.github.com')
         .post('/app/installations/588033/access_tokens')
@@ -101,16 +98,16 @@ describe('owners bot', () => {
       // Test that a check-run is created
       nock('https://api.github.com')
         .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
-          console.log(body);
           expect(body).toMatchObject({
-            name: 'My app!',
+            name: 'AMP Owners bot',
             head_branch: payload.pull_request.head.ref,
             head_sha: payload.pull_request.head.sha,
             status: 'completed',
             conclusion: 'success',
             output: {
-              title: 'Probot check!',
-              summary: 'The check has passed!',
+              title: 'AMP Owners bot check',
+              summary: 'The check was a success!',
+              text: '# erwinmombay   - ./dir2/dir1/dir1/file.txt    ',
             }
           });
           return true;
@@ -148,13 +145,14 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .patch('/repos/erwinmombay/github-owners-bot-test-repo/check-runs/53472313', body => {
           expect(body).toMatchObject({
-            name: 'My app!',
+            name: 'AMP Owners bot',
             head_branch: payload.pull_request.head.ref,
             check_run_id: checkRunsPayload.check_runs[0].id,
             conclusion: 'failure',
             output: {
-              title: 'Probot check!',
-              summary: 'The check has passed!',
+              title: 'AMP Owners bot check',
+              summary: 'The check was a failure!',
+              text: '# erwinmombay   - ./dir2/dir1/dir1/file.txt    ',
             }
           });
           return true;

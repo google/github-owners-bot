@@ -56,14 +56,17 @@ class Owner {
    */
   static async getOwners(git, pr) {
     // Update the local target repository of the latest from master
-    await git.pullLatestForRepo(process.env.GITHUB_REPO_DIR, 'origin', 'master');
+    await git.pullLatestForRepo(process.env.GITHUB_REPO_DIR, 'origin',
+        'master');
     const promises = Promise.all([
       pr.listFiles(),
-      git.getOwnersFilesForBranch(pr.author, process.env.GITHUB_REPO_DIR, 'master'),
+      git.getOwnersFilesForBranch(pr.author, process.env.GITHUB_REPO_DIR,
+          'master'),
     ]);
     const res = await promises;
     const [files, ownersMap] = res;
     const owners = findOwners(files, ownersMap);
+    pr.context.log.debug('[getOwners]', owners);
     return owners;
   }
 }

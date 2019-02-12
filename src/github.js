@@ -27,6 +27,8 @@ class PullRequest {
 
   constructor(context, pr) {
 
+    this.name = 'AMP Owners bot';
+
     this.git = new Git(context);
     this.context = context;
     this.github = context.github;
@@ -58,13 +60,14 @@ class PullRequest {
       return fileOwner.owner.dirOwners;
     });
     reviewers = _.union(...reviewers);
-    const text = this.buildCheckOutput(prInfo);
+    const checkOutputText = this.buildCheckOutput(prInfo);
     const checkRuns = await this.getCheckRun();
     const {hasCheckRun, checkRun} = this.hasCheckRun(checkRuns);
     if (hasCheckRun) {
-      return this.updateCheckRun(checkRun, reviewers, prInfo.approvalsMet);
+      return this.updateCheckRun(checkRun, checkOutputText,
+          prInfo.approvalsMet);
     }
-    return this.createCheckRun(reviewers, prInfo.approvalsMet);
+    return this.createCheckRun(checkOutputText, prInfo.approvalsMet);
   }
 
   async getMeta() {
@@ -133,34 +136,36 @@ class PullRequest {
     });
   }
 
-  async createCheckRun(reviewers, areApprovalsMet) {
+  async createCheckRun(text, areApprovalsMet) {
+    const conclusion = areApprovalsMet ? 'success' : 'failure';
     return this.github.checks.create(this.context.repo({
-      name: 'My app!',
+      name: this.name,
       head_branch: this.headRef,
       head_sha: this.headSha,
       status: 'completed',
-      conclusion: areApprovalsMet ? 'success' : 'failure',
+      conclusion,
       completed_at: new Date(),
       output: {
-        title: 'Probot check!',
-        summary: 'The check has passed!',
-        text: 'wah',
+        title: `${this.name} check`,
+        summary: `The check was a ${conclusion}!`,
+        text,
       }
     }))
   }
 
-  async updateCheckRun(checkRun, reviewers, areApprovalsMet) {
+  async updateCheckRun(checkRun, text, areApprovalsMet) {
     this.context.log.debug('[updateCheckRun]', checkRun);
+    const conclusion = areApprovalsMet ? 'success' : 'failure';
     this.github.checks.update({
       ...this.options,
       check_run_id: checkRun.id,
       status: 'completed',
-      conclusion: areApprovalsMet ? 'success' : 'failure',
+      conclusion,
       completed_at: new Date(),
       output: {
-        title: 'Probot check!',
-        summary: 'The check has passed!',
-        text: 'wah',
+        title: `${this.name} check`,
+        summary: `The check was a ${conclusion}!`,
+        text,
       }
     })
   }
@@ -180,17 +185,27 @@ class PullRequest {
    */
   hasCheckRun(checkRuns) {
     const hasCheckRun = checkRuns.total_count > 0;
-    const checkRun = checkRuns.check_runs.filter(x => {
+    const [checkRun] = checkRuns.check_runs.filter(x => {
       return x.head_sha === this.headSha;
-    })[0];
+    });
     const tuple = {hasCheckRun: hasCheckRun && !!checkRun, checkRun};
     this.context.log.debug('[hasCheckRun]', tuple);
     return tuple;
   }
 
+  /**
+   * @return {string}
+   */
   buildCheckOutput(prInfo) {
-    this.context.log.debug('prInfo');
-    this.context.log.debug(prInfo);
+    let text = Object.values(prInfo.fileOwners).map(fileOwner => {
+      const fileOwnerHeader = `# ${fileOwner.owner.dirOwners.join(',')}  `;
+      const files = fileOwner.files.map(file => {
+        return ` - ${file.path}  `;
+      });
+      return `${fileOwnerHeader}${files}  `;
+    }).join('  ');
+    this.context.log.debug('[buildCheckOutput]', text);
+    return text;
   }
 }
 
