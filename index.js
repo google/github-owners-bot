@@ -5,7 +5,7 @@ module.exports = app => {
 
   async function pullRequest(context) {
     // Only allow PR's from our fork
-    if (!/repos\/erwinmombay/.test(context.payload.pull_request)) {
+    if (!/repos\/(erwinmombay|rsimha)/.test(context.payload.pull_request)) {
       return;
     }
     const pr = new PullRequest(context, context.payload.pull_request);
