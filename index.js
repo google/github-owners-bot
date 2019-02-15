@@ -5,10 +5,12 @@ module.exports = app => {
 
   async function pullRequest(context) {
     // Only allow PR's from our fork
-    if (!/repos\/(erwinmombay|rsimha)/.test(context.payload.pull_request)) {
+    const disallowed = !/repos\/(erwinmombay|rsimha)/.test(context.payload.pull_request.url);
+    context.log.debug('[disallowed?]', disallowed, context.payload.pull_request.url);
+    if (disallowed) {
       return;
     }
     const pr = new PullRequest(context, context.payload.pull_request);
-    await pr.processOpened();
+    return await pr.processOpened();
   }
 }

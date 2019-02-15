@@ -198,7 +198,7 @@ class PullRequest {
    */
   buildCheckOutput(prInfo) {
     let text = Object.values(prInfo.fileOwners).map(fileOwner => {
-      const fileOwnerHeader = `# ${fileOwner.owner.dirOwners.join(',')}  `;
+      const fileOwnerHeader = `### possible reviewers: ${fileOwner.owner.dirOwners.join(',')}\n`;
       const files = fileOwner.files.map(file => {
         return ` - ${file.path}  `;
       });
