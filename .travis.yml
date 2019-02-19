@@ -4,7 +4,7 @@ dist: trusty
 node_js:
   - "lts/*"
 script:
-  - node_modules/gulp/bin/gulp.js test
+  - npm run test
 cache:
   yarn: true
   directories:
