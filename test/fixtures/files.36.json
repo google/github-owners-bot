@@ -1,0 +1,14 @@
+[
+    {
+        "sha": "3b2aed8e02b2d051b18268f41c4fee799fe90aa9",
+        "filename": "dir2/new-file.txt",
+        "status": "added",
+        "additions": 1,
+        "deletions": 0,
+        "changes": 1,
+        "blob_url": "https://github.com/erwinmombay/github-owners-bot-test-repo/blob/c7fdbd7f947fca608b20006da8535af5384ab699/dir2/new-file.txt",
+        "raw_url": "https://github.com/erwinmombay/github-owners-bot-test-repo/raw/c7fdbd7f947fca608b20006da8535af5384ab699/dir2/new-file.txt",
+        "contents_url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo/contents/dir2/new-file.txt?ref=c7fdbd7f947fca608b20006da8535af5384ab699",
+        "patch": "@@ -0,0 +1 @@\n+this is a new file"
+    }
+]

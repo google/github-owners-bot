@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-const config = require('../config');
-const bb = require('bluebird');
 const path = require('path');
-const GITHUB_REPO_DIR = config.get('GITHUB_REPO_DIR');
 
 /**
  * @fileoverview Contains classes and functions in relation to "OWNER" files
@@ -27,7 +24,7 @@ const GITHUB_REPO_DIR = config.get('GITHUB_REPO_DIR');
 /**
  * Represents an OWNER file found in the repo.
  */
-export class Owner {
+class Owner {
 
   constructor(config, pathToRepoDir, filePath) {
     // We want it have the leading ./ to evaluate `.` later on
@@ -41,6 +38,9 @@ export class Owner {
     this.parseConfig_(config);
   }
 
+  /**
+   * @param {!Object} config
+   */
   parseConfig_(config) {
     config.forEach(entry => {
       if (typeof entry === 'string') {
@@ -54,21 +54,19 @@ export class Owner {
    * @param {!Git} git
    * @param {!PullRequest} pr
    */
-  static getOwners(git, pr) {
+  static async getOwners(git, pr) {
     // Update the local target repository of the latest from master
-    return git.pullLatestForRepo(GITHUB_REPO_DIR, 'origin', 'master')
-      .then(() => {
-        const promises = bb.all([
-          pr.getFiles(),
-          git.getOwnersFilesForBranch(pr.author, GITHUB_REPO_DIR, 'master'),
-        ]);
-        return promises.then(function(res) {
-          const files = res[0];
-          const ownersMap = res[1];
-          const owners = findOwners(files, ownersMap);
-          return owners;
-        });
-      });
+    git.pullLatestForRepo(process.env.GITHUB_REPO_DIR, 'origin', 'master');
+    const promises = Promise.all([
+      pr.listFiles(),
+      git.getOwnersFilesForBranch(pr.author, process.env.GITHUB_REPO_DIR,
+          'master'),
+    ]);
+    const res = await promises;
+    const [files, ownersMap] = res;
+    const owners = findOwners(files, ownersMap);
+    pr.context.log.debug('[getOwners]', owners);
+    return owners;
   }
 }
 
@@ -77,7 +75,7 @@ export class Owner {
  * of files. It first tries to find the interection across the files and if
  * there are none it will return the union across usernames.
  */
-export function findOwners(files, ownersMap) {
+function findOwners(files, ownersMap) {
   const fileOwners = Object.create(null);
   files.forEach(file => {
     const owner = findClosestOwnersFile(file, ownersMap);
@@ -98,7 +96,7 @@ export function findOwners(files, ownersMap) {
  * in the repo, we simulate a folder traversal by splitting the path and
  * finding the closest OWNER file for a RepoFile.
  */
-export function findClosestOwnersFile(file, ownersMap) {
+function findClosestOwnersFile(file, ownersMap) {
   let dirname = file.dirname;
   let owner = ownersMap[dirname];
   const dirs = dirname.split(path.sep);
@@ -110,11 +108,17 @@ export function findClosestOwnersFile(file, ownersMap) {
   return owner;
 }
 
-export function createOwnersMap(owners) {
+function createOwnersMap(owners) {
   return owners.reduce((ownersMap, owner) => {
+    // Handles empty OWNERS.yaml files.
+    if (!owner) {
+      return ownersMap;
+    }
     if (owner.dirOwners.length) {
       ownersMap[owner.dirname] = owner;
     }
     return ownersMap;
   }, Object.create(null));
 }
+
+module.exports = {Owner, findOwners, findClosestOwnersFile, createOwnersMap};

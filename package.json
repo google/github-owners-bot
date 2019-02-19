@@ -6,60 +6,40 @@
   "repository": "http://github.com/ampproject/github-owners-bot",
   "description": "A web service that suggests approvers for a GitHub pull request based on OWNERS files and enforces reviews by OWNERS as a GitHub status check.",
   "engines": {
-    "node": ">=8",
-    "yarn": ">=1.9"
+    "node": "^10.11"
   },
   "scripts": {
-    "start": "node dist/app.js",
-    "monitor": "nodemon dist/app.js",
-    "deploy": "gcloud app deploy app.yaml",
-    "test": "ava"
+    "dev": "nodemon",
+    "start": "probot run ./index.js",
+    "test": "jest",
+    "test:watch": "jest --watch --notify --notifyMode=change"
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@google-cloud/connect-datastore": "^1.0.0",
-    "@google-cloud/datastore": "0.6.0",
-    "@google-cloud/debug-agent": "3.0.0",
-    "@google-cloud/trace-agent": "3.3.1",
-    "bluebird": "3.5.3",
-    "body-parser": "1.18.3",
-    "express": "4.16.4",
-    "express-session": "1.15.6",
-    "express-winston": "2.6.0",
     "lodash": "4.17.11",
-    "nconf": "0.10.0",
-    "request": "2.88.0",
-    "winston": "2.2.0",
-    "yamljs": "0.2.8"
+    "probot": "7.5.0",
+    "yamljs": "0.3.0"
   },
   "devDependencies": {
-    "@babel/core": "7.0.0",
-    "@babel/preset-env": "7.0.0",
-    "@babel/register": "7.0.0",
-    "ava": "1.1.0",
-    "babel-eslint": "8",
-    "del": "2.2.2",
-    "eslint": "4.x",
-    "eslint-plugin-ava": "5.1.1",
-    "gulp": "4.0.0",
-    "gulp-ava": "1.0.0",
-    "gulp-babel": "8.0.0",
-    "gulp-eslint": "3.0.1",
-    "gulp-load-plugins": "1.5.0",
-    "minimist": "1.2.0",
-    "nodemon": "1.18.7",
-    "sinon": "1.17.6",
-    "supertest": "3.0.0"
+    "jest": "23.6.0",
+    "nock": "10.0.6",
+    "nodemon": "1.18.9",
+    "sinon": "7.2.3",
+    "smee-client": "1.0.2"
   },
-  "ava": {
-    "require": [
-      "@babel/register"
-    ],
-    "files": [
-      "tests.dist/**/{test,test-*}.js"
-    ],
-    "concurrency": 5,
-    "tap": false,
-    "failFast": true
+  "standard": {
+    "env": [
+      "jest"
+    ]
+  },
+  "nodemonConfig": {
+    "exec": "npm start",
+    "watch": [
+      ".env",
+      "."
+    ]
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }

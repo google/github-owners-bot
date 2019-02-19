@@ -14,62 +14,68 @@
  * limitations under the License.
  */
 
-const logging = require('./logging').default;
 const {RepoFile} = require('./repo-file');
-const config = require('../config');
-const bb = require('bluebird');
+const {Owner} = require('./owner');
+const {Git} = require('./git');
 const _ = require('lodash');
 
-const request = bb.promisify(require('request'));
-const GITHUB_ACCESS_TOKEN = config.get('GITHUB_ACCESS_TOKEN');
-
-const headers = {
-  'User-Agent': 'get-owners',
-  'Accept': 'application/vnd.github.v3+json',
-};
-const qs = {
-  access_token: GITHUB_ACCESS_TOKEN,
-};
 
 /**
  * Maps the github json payload to a simpler data structure.
  */
-export class PullRequest {
+class PullRequest {
 
-  constructor(json) {
-    this.id = json.number;
-    this.author = json.user.login;
-    this.state = json.state;
+  constructor(context, pr) {
+
+    this.name = 'AMP Owners bot';
+
+    this.git = new Git(context);
+    this.context = context;
+    this.github = context.github;
+
+    this.id = pr.number;
+    this.author = pr.user.login;
+    this.state = pr.state;
+
+    this.owner = pr.base.repo.owner.login;
+    this.repo = pr.base.repo.name;
 
     // Ref here is the branch name
-    this.headRef = json.head.ref;
-    this.headSha = json.head.sha;
+    this.headRef = pr.head.ref;
+    this.headSha = pr.head.sha;
 
-    this.baseRef = json.base.ref;
-    this.baseSha = json.base.sha;
+    // Base is usually master
+    this.baseRef = pr.base.ref;
+    this.baseSha = pr.base.sha;
 
-    this.project = json.base.repo.owner.login;
-    this.repo = json.base.repo.name;
-    this.cloneUrl = json.base.repo.clone_url;
-
-    this.statusesUrl = json.statuses_url;
-    // Comments on code pulls/${id}/comments
-    this.reviewCommentsUrl = json.review_comments_url;
-    // Comments on Pull Request issues/${id}/comments
-    this.commentsUrl = json.comments_url;
-
-    this.reviewersUrl = `${json.url}/reviews`;
+    this.options = {
+      owner: this.owner,
+      repo: this.repo,
+    };
   }
 
-  /**
-   * Helper function to make it easier to stub/spy on requests
-   */
-  request_(config) {
-    return request(config);
+  async processOpened() {
+    const prInfo = await this.getMeta();
+    let reviewers = Object.values(prInfo.fileOwners).map(fileOwner => {
+      return fileOwner.owner.dirOwners;
+    });
+    reviewers = _.union(...reviewers);
+    const checkOutputText = this.buildCheckOutput(prInfo);
+    const checkRuns = await this.getCheckRun();
+    const {hasCheckRun, checkRun} = this.hasCheckRun(checkRuns);
+    if (hasCheckRun) {
+      return this.updateCheckRun(checkRun, checkOutputText,
+          prInfo.approvalsMet);
+    }
+    return this.createCheckRun(checkOutputText, prInfo.approvalsMet);
   }
 
-  onError_(e) {
-    logging.error(e.message);
+  async getMeta() {
+    const fileOwners = await Owner.getOwners(this.git, this);
+    const reviews = await this.getUniqueReviews();
+    this.context.log.debug('[getMeta]', reviews);
+    const approvalsMet = this.areAllApprovalsMet(fileOwners, reviews);
+    return {fileOwners, reviews, approvalsMet};
   }
 
   /**
@@ -78,113 +84,40 @@ export class PullRequest {
    * and returns type RepoFile[].
    * @return {!Promise<!Array<!RepoFile>>}
    */
-  getFiles() {
-    return this.request_({
-      url: `https://api.github.com/repos/${this.project}/${this.repo}/pulls/` +
-          `${this.id}/files`,
-      method: 'GET',
-      qs,
-      headers,
-    }).then(function(res) {
-      const body = JSON.parse(res.body);
-      return body.map(item => new RepoFile(item.filename));
-    }).catch(this.onError_);
+  async listFiles() {
+    const res = await this.github.pullRequests.listFiles({
+      number: this.id,
+      ...this.options,
+    });
+    this.context.log.debug('[listFiles]', res.data);
+    return res.data.map(item => new RepoFile(item.filename));
+  }
+
+  async getUniqueReviews() {
+    const reviews = await this.getReviews();
+      // This should always pick out the first instance.
+    return _.uniqBy(reviews, 'username');
+  }
+
+  async getReviews() {
+    const res = await this.github.pullRequests.listReviews({
+      number: this.id,
+      ...this.options,
+    });
+    this.context.log.debug('[getReviews]', res.data);
+    // Sort by latest submitted_at date first since users and state
+    // are not unique.
+    const reviews = res.data.map(x => new Review(x)).sort((a, b) => {
+      return b.submitted_at - a.submitted_at;
+    });
+    return reviews;
   }
 
   /**
    * @param {!Array<string>}
    * @return {!Promise}
    */
-  setReviewers(reviewers) {
-    const reviewsHeaders = Object.assign({},
-          this.getPostHeaders_(),
-          // Need to opt-into reviews API
-          {'Accept': 'application/vnd.github.symmetra-preview+json'});
-
-    return this.request_({
-      url: `https://api.github.com/repos/${this.project}/${this.repo}/pulls/` +
-          `${this.id}/requested_reviewers`,
-      method: 'POST',
-      qs,
-      headers: reviewsHeaders,
-      body: JSON.stringify({reviewers}),
-    }).catch(this.onError_);
-  }
-
-  setStatus(body) {
-    return request({
-      url: this.statusesUrl,
-      json: true,
-      method: 'POST',
-      headers: this.getPostHeaders_(),
-      body,
-    });
-  }
-
-  setApprovedStatus(reviewers, approvalsMet) {
-    reviewers = reviewers.join(', ');
-    return this.setStatus({
-      state: 'success',
-      target_url: 'https://www.ampproject.org',
-      description: `approvals met: ${approvalsMet}. ${reviewers}`,
-      context: 'ampproject/owners-bot',
-    }).then(r => {
-      console.log(r.body);
-    });
-  }
-
-  setFailureStatus(reviewers, approvalsMet) {
-    reviewers = reviewers.join(', ');
-    return this.setStatus({
-      state: 'failure',
-      target_url: 'https://www.ampproject.org',
-      description: `approvals met: ${approvalsMet}. ${reviewers}`,
-      context: 'ampproject/owners-bot',
-    });
-  }
-
-  /**
-   * @return {!Promise<!Array<!Review>>}
-   */
-  getReviews() {
-    const reviewsHeaders = Object.assign({},
-        headers,
-        // Need to opt-into reviews API
-        {'Accept': 'application/vnd.github.black-cat-preview+json'});
-    return this.request_({
-      url: `https://api.github.com/repos/${this.project}/${this.repo}/pulls/` +
-          `${this.id}/reviews`,
-      method: 'GET',
-      qs,
-      headers: reviewsHeaders,
-    }).then(function(res) {
-      const body = JSON.parse(res.body);
-      // Sort by latest submitted_at date first since users and state
-      // are not unique.
-      const reviews = body.map(x => new Review(x)).sort((a, b) => {
-        return b.submitted_at - a.submitted_at;
-      });
-      return reviews;
-    }).catch(this.onError_);
-  }
-
-  /**
-   * @return {!Promise<!Array<!Review>>}
-   */
-  getUniqueReviews() {
-    return this.getReviews().then(reviews => {
-      // This should always pick out the first instance.
-      return _.uniqBy(reviews, 'username');
-    }).catch(this.onError_);
-  }
-
-  /**
-   * @return {!Object<string>}
-   */
-  getPostHeaders_() {
-    return Object.assign({
-      'Authorization': `token ${GITHUB_ACCESS_TOKEN}`,
-    }, headers);
+  async setReviewers(reviewers) {
   }
 
   areAllApprovalsMet(fileOwners, reviews) {
@@ -203,20 +136,79 @@ export class PullRequest {
     });
   }
 
-  static fetch(url) {
-    return request({
-      url,
-      method: 'GET', qs, headers,
-    }).then(res => {
-      const body = JSON.parse(res.body);
-      return new PullRequest(body);
-    }).catch(e => {
-      logging.error(e.message);
+  async createCheckRun(text, areApprovalsMet) {
+    const conclusion = areApprovalsMet ? 'success' : 'failure';
+    return this.github.checks.create(this.context.repo({
+      name: this.name,
+      head_branch: this.headRef,
+      head_sha: this.headSha,
+      status: 'completed',
+      conclusion,
+      completed_at: new Date(),
+      output: {
+        title: `${this.name} reviewers check`,
+        summary: `The check was a ${conclusion}!`,
+        text,
+      }
+    }));
+  }
+
+  async updateCheckRun(checkRun, text, areApprovalsMet) {
+    this.context.log.debug('[updateCheckRun]', checkRun);
+    const conclusion = areApprovalsMet ? 'success' : 'failure';
+    return this.github.checks.update(this.context.repo({
+      check_run_id: checkRun.id,
+      status: 'completed',
+      conclusion,
+      completed_at: new Date(),
+      output: {
+        title: `${this.name} reviewers check`,
+        summary: `The check was a ${conclusion}!`,
+        text,
+      }
+    }));
+  }
+
+  async getCheckRun() {
+    const res = await this.github.checks.listForRef({
+      owner: this.owner,
+      repo: this.repo,
+      ref: this.headRef,
     });
+    this.context.log.debug('[getCheckRun]', res);
+    return res.data;
+  }
+
+  /**
+   * @return {{hasChecRun: boolean, checkRun: !Object|undefined}}
+   */
+  hasCheckRun(checkRuns) {
+    const hasCheckRun = checkRuns.total_count > 0;
+    const [checkRun] = checkRuns.check_runs.filter(x => {
+      return x.head_sha === this.headSha;
+    });
+    const tuple = {hasCheckRun: hasCheckRun && !!checkRun, checkRun};
+    this.context.log.debug('[hasCheckRun]', tuple);
+    return tuple;
+  }
+
+  /**
+   * @return {string}
+   */
+  buildCheckOutput(prInfo) {
+    let text = Object.values(prInfo.fileOwners).map(fileOwner => {
+      const fileOwnerHeader = `## possible reviewers: ${fileOwner.owner.dirOwners.join(',')}\n`;
+      const files = fileOwner.files.map(file => {
+        return ` - ${file.path}\n`;
+      });
+      return `\n${fileOwnerHeader}${files}`;
+    }).join('  ');
+    this.context.log.debug('[buildCheckOutput]', text);
+    return text;
   }
 }
 
-export class PullRequestComment {
+class PullRequestComment {
 
   constructor(json) {
     this.id = json.id;
@@ -229,7 +221,7 @@ export class PullRequestComment {
   }
 }
 
-export class Label {
+class Label {
 
   constructor(json) {
     this.id = json.id;
@@ -240,14 +232,14 @@ export class Label {
   }
 }
 
-export class Sender {
+class Sender {
 
   constructor(json) {
     this.username = json.login;
   }
 }
 
-export class Review {
+class Review {
 
   constructor(json) {
     this.id = json.id;
@@ -260,3 +252,5 @@ export class Review {
     return this.state == 'approved';
   }
 }
+
+module.exports = {PullRequest, PullRequestComment, Label, Sender, Review};
