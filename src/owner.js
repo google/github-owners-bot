@@ -56,8 +56,7 @@ class Owner {
    */
   static async getOwners(git, pr) {
     // Update the local target repository of the latest from master
-    await git.pullLatestForRepo(process.env.GITHUB_REPO_DIR, 'origin',
-        'master');
+    git.pullLatestForRepo(process.env.GITHUB_REPO_DIR, 'origin', 'master');
     const promises = Promise.all([
       pr.listFiles(),
       git.getOwnersFilesForBranch(pr.author, process.env.GITHUB_REPO_DIR,

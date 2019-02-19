@@ -9,7 +9,7 @@ const reviewsPayload = require('./fixtures/reviews.35');
 const checkRunsPayload = require('./fixtures/check-runs.get.35');
 const emptyCheckRunsPayload = require('./fixtures/check-runs.get.35.empty');
 const checkRunsCreate = require('./fixtures/check-runs')
-const Git = jest.genMockFromModule('../src/git').Git;
+const Git = require('../src/git').Git;
 const Owner = require('../src/owner').Owner;
 const sinon = require('sinon');
 
@@ -64,16 +64,16 @@ describe('owners bot', () => {
   let sandbox;
 
   beforeEach(() => {
+    sandbox = sinon.createSandbox();
+    sandbox.stub(Git.prototype, 'pullLatestForRepo').returns(null);
+    sandbox.stub(Git.prototype, 'getOwnersFilesForBranch')
+        .returns(ownersYamlStruct);
+
     probot = new Probot({})
     const app = probot.load(owners);
 
     // just return a test token
     app.app = () => 'test';
-
-    sandbox = sinon.createSandbox();
-
-    sandbox.stub(Git.prototype, 'getOwnersFilesForBranch')
-        .returns(ownersYamlStruct);
   })
 
   afterEach(() => {
@@ -83,7 +83,6 @@ describe('owners bot', () => {
   describe('create check run', () => {
 
     test('with failure check when there are 0 reviews on a pull request', async () => {
-
 
       nock('https://api.github.com')
         .post('/app/installations/588033/access_tokens')
