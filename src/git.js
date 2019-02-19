@@ -28,27 +28,6 @@ function yamlReader(str) {
   return yaml.parse(str);
 }
 
-/**
- * Reads the actual OWNER file on the file system and parses it using the
- * passed in `formatReader` and returns an `OwnersMap`.
- */
-async function ownersParser(context, formatReader, pathToRepoDir, ownersPaths) {
-  const promises = ownersPaths.map(ownerPath => {
-    const fullPath = path.resolve(pathToRepoDir, ownerPath);
-    return fs.readFile(fullPath).then(file => {
-      const config = formatReader(file.toString());
-      if (!config) {
-        const str = `No config found for ${fullPath}`;
-        context.log.error(str);
-        // This handles OWNERS.yaml files that are empty.
-        return null;
-      }
-      return new Owner(config, pathToRepoDir, ownerPath);
-    });
-  });
-  return Promise.all(promises).then(createOwnersMap);
-}
-
 class Git {
 
   constructor(context) {
@@ -56,7 +35,29 @@ class Git {
   }
 
   /**
+   * Reads the actual OWNER file on the file system and parses it using the
+   * passed in `formatReader` and returns an `OwnersMap`.
+   */
+  async ownersParser(formatReader, pathToRepoDir, ownersPaths) {
+    const promises = ownersPaths.map(ownerPath => {
+      const fullPath = path.resolve(pathToRepoDir, ownerPath);
+      return fs.readFile(fullPath).then(file => {
+        const config = formatReader(file.toString());
+        if (!config) {
+          const str = `No config found for ${fullPath}`;
+          this.context.log.error(str);
+          // This handles OWNERS.yaml files that are empty.
+          return null;
+        }
+        return new Owner(config, pathToRepoDir, ownerPath);
+      });
+    });
+    return Promise.all(promises).then(createOwnersMap);
+  }
+
+  /**
    * Retrieves all the OWNERS paths inside a repository.
+   * @return {!Promise<!OwnersMap>}
    */
   async getOwnersFilesForBranch(author, dirPath, targetBranch) {
     // NOTE: for some reason `git ls-tree --full-tree -r HEAD **/OWNERS*
@@ -74,7 +75,7 @@ class Git {
     const ownersPaths = stdoutToArray(stdout)
       // Remove unneeded string. We only want the file paths.
       .filter(x => !(matcher.test(x)));
-    return ownersParser(this.context, yamlReader, dirPath, ownersPaths, author);
+    return this.ownersParser(yamlReader, dirPath, ownersPaths, author);
   }
 
   /**

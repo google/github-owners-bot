@@ -150,14 +150,13 @@ class PullRequest {
         summary: `The check was a ${conclusion}!`,
         text,
       }
-    }))
+    }));
   }
 
   async updateCheckRun(checkRun, text, areApprovalsMet) {
     this.context.log.debug('[updateCheckRun]', checkRun);
     const conclusion = areApprovalsMet ? 'success' : 'failure';
-    this.github.checks.update({
-      ...this.options,
+    return this.github.checks.update(this.context.repo({
       check_run_id: checkRun.id,
       status: 'completed',
       conclusion,
@@ -167,7 +166,7 @@ class PullRequest {
         summary: `The check was a ${conclusion}!`,
         text,
       }
-    })
+    }));
   }
 
   async getCheckRun() {

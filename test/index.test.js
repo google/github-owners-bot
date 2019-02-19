@@ -16,8 +16,52 @@ const sinon = require('sinon');
 nock.disableNetConnect();
 jest.setTimeout(30000);
 
+const ownersYamlStruct = {
+  '.': {
+    'path': './OWNERS.yaml',
+    'dirname': '.',
+    'fullpath': '/Users/erwinm/dev/github-owners-bot-test-repo/OWNERS.yaml',
+    'score': 0,
+    'dirOwners': [
+      'donttrustthisbot'
+    ],
+    'fileOwners': {}
+  },
+  './dir1': {
+    'path': './dir1/OWNERS.yaml',
+    'dirname': './dir1',
+    'fullpath': '/Users/erwinm/dev/github-owners-bot-test-repo/dir1/OWNERS.yaml',
+    'score': 1,
+    'dirOwners': [
+      'donttrustthisbot'
+    ],
+    'fileOwners': {}
+  },
+  './dir2': {
+    'path': './dir2/OWNERS.yaml',
+    'dirname': './dir2',
+    'fullpath': '/Users/erwinm/dev/github-owners-bot-test-repo/dir2/OWNERS.yaml',
+    'score': 1,
+    'dirOwners': [
+      'erwinmombay'
+    ],
+    'fileOwners': {}
+  },
+  './dir2/dir1/dir1': {
+    'path': './dir2/dir1/dir1/OWNERS.yaml',
+    'dirname': './dir2/dir1/dir1',
+    'fullpath': '/Users/erwinm/dev/github-owners-bot-test-repo/dir2/dir1/dir1/OWNERS.yaml',
+    'score': 3,
+    'dirOwners': [
+      'erwinmombay'
+    ],
+    'fileOwners': {}
+  }
+};
+
 describe('owners bot', () => {
   let probot;
+  let sandbox;
 
   beforeEach(() => {
     probot = new Probot({})
@@ -25,14 +69,21 @@ describe('owners bot', () => {
 
     // just return a test token
     app.app = () => 'test';
+
+    sandbox = sinon.createSandbox();
+
+    sandbox.stub(Git.prototype, 'getOwnersFilesForBranch')
+        .returns(ownersYamlStruct);
   })
 
   afterEach(() => {
+    sandbox.restore();
   });
 
   describe('create check run', () => {
 
     test('with failure check when there are 0 reviews on a pull request', async () => {
+
 
       nock('https://api.github.com')
         .post('/app/installations/588033/access_tokens')
@@ -64,9 +115,9 @@ describe('owners bot', () => {
             status: 'completed',
             conclusion: 'failure',
             output: {
-              title: 'AMP Owners bot check',
+              title: 'AMP Owners bot reviewers check',
               summary: 'The check was a failure!',
-              text: '# erwinmombay   - ./dir2/dir1/dir1/file.txt    ',
+              text: '\n## possible reviewers: erwinmombay\n - ./dir2/dir1/dir1/file.txt\n',
             }
           });
           return true;
@@ -107,9 +158,9 @@ describe('owners bot', () => {
             status: 'completed',
             conclusion: 'success',
             output: {
-              title: 'AMP Owners bot check',
+              title: 'AMP Owners bot reviewers check',
               summary: 'The check was a success!',
-              text: '# erwinmombay   - ./dir2/new-file.txt    ',
+              text: '\n## possible reviewers: erwinmombay\n - ./dir2/new-file.txt\n',
             }
           });
           return true;
@@ -147,18 +198,15 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .patch('/repos/erwinmombay/github-owners-bot-test-repo/check-runs/53472313', body => {
           expect(body).toMatchObject({
-            name: 'AMP Owners bot',
-            head_branch: payload.pull_request.head.ref,
-            check_run_id: checkRunsPayload.check_runs[0].id,
             conclusion: 'failure',
             output: {
-              title: 'AMP Owners bot check',
+              title: 'AMP Owners bot reviewers check',
               summary: 'The check was a failure!',
-              text: '# erwinmombay   - ./dir2/dir1/dir1/file.txt    ',
+              text: '\n## possible reviewers: erwinmombay\n - ./dir2/dir1/dir1/file.txt\n',
             }
           });
           return true;
-        }).reply(200)
+        }).reply(200);
 
       await probot.receive({event: 'pull_request', payload});
     });
