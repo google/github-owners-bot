@@ -111,6 +111,10 @@ function findClosestOwnersFile(file, ownersMap) {
 
 function createOwnersMap(owners) {
   return owners.reduce((ownersMap, owner) => {
+    // Handles empty OWNERS.yaml files.
+    if (!owner) {
+      return ownersMap;
+    }
     if (owner.dirOwners.length) {
       ownersMap[owner.dirname] = owner;
     }

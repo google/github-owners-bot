@@ -32,11 +32,18 @@ function yamlReader(str) {
  * Reads the actual OWNER file on the file system and parses it using the
  * passed in `formatReader` and returns an `OwnersMap`.
  */
-async function ownersParser(formatReader, pathToRepoDir, ownersPaths) {
+async function ownersParser(context, formatReader, pathToRepoDir, ownersPaths) {
   const promises = ownersPaths.map(ownerPath => {
     const fullPath = path.resolve(pathToRepoDir, ownerPath);
     return fs.readFile(fullPath).then(file => {
-      return new Owner(formatReader(file.toString()), pathToRepoDir, ownerPath);
+      const config = formatReader(file.toString());
+      if (!config) {
+        const str = `No config found for ${fullPath}`;
+        context.log.error(str);
+        // This handles OWNERS.yaml files that are empty.
+        return null;
+      }
+      return new Owner(config, pathToRepoDir, ownerPath);
     });
   });
   return Promise.all(promises).then(createOwnersMap);
@@ -67,7 +74,7 @@ class Git {
     const ownersPaths = stdoutToArray(stdout)
       // Remove unneeded string. We only want the file paths.
       .filter(x => !(matcher.test(x)));
-    return ownersParser(yamlReader, dirPath, ownersPaths, author);
+    return ownersParser(this.context, yamlReader, dirPath, ownersPaths, author);
   }
 
   /**

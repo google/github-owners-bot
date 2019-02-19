@@ -146,7 +146,7 @@ class PullRequest {
       conclusion,
       completed_at: new Date(),
       output: {
-        title: `${this.name} check`,
+        title: `${this.name} reviewers check`,
         summary: `The check was a ${conclusion}!`,
         text,
       }
@@ -163,7 +163,7 @@ class PullRequest {
       conclusion,
       completed_at: new Date(),
       output: {
-        title: `${this.name} check`,
+        title: `${this.name} reviewers check`,
         summary: `The check was a ${conclusion}!`,
         text,
       }
@@ -198,11 +198,11 @@ class PullRequest {
    */
   buildCheckOutput(prInfo) {
     let text = Object.values(prInfo.fileOwners).map(fileOwner => {
-      const fileOwnerHeader = `### possible reviewers: ${fileOwner.owner.dirOwners.join(',')}\n`;
+      const fileOwnerHeader = `## possible reviewers: ${fileOwner.owner.dirOwners.join(',')}\n`;
       const files = fileOwner.files.map(file => {
-        return ` - ${file.path}  `;
+        return ` - ${file.path}\n`;
       });
-      return `${fileOwnerHeader}${files}  `;
+      return `\n${fileOwnerHeader}${files}`;
     }).join('  ');
     this.context.log.debug('[buildCheckOutput]', text);
     return text;
