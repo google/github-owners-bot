@@ -142,7 +142,6 @@ class PullRequest {
     // GitHub might not be ready.
     await sleep(2000);
     const conclusion = areApprovalsMet ? 'success' : 'failure';
-    setTimeout(function() {
     return this.github.checks.create(this.context.repo({
       name: this.name,
       head_branch: this.headRef,
@@ -156,7 +155,6 @@ class PullRequest {
         text,
       }
     }));
-    }, 2000);
   }
 
   async updateCheckRun(checkRun, text, areApprovalsMet) {
