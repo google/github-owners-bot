@@ -1,7 +1,7 @@
 const PullRequest = require('./src/github').PullRequest;
 
 module.exports = app => {
-  app.on(['pull_request.opened'], pullRequest)
+  app.on(['pull_request.opened', 'pull_request.synchronized'], pullRequest)
 
   async function pullRequest(context) {
     // Only allow PR's from our fork

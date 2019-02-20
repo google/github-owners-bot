@@ -76,7 +76,8 @@ class PullRequest {
     const reviews = await this.getUniqueReviews();
     this.context.log.debug('[getMeta]', reviews);
     const approvalsMet = this.areAllApprovalsMet(fileOwners, reviews);
-    return {fileOwners, reviews, approvalsMet};
+    const reviewersWhoApproved = this.getReviewersWhoApproved(reviews);
+    return {fileOwners, reviews, approvalsMet, reviewersWhoApproved};
   }
 
   /**
@@ -122,13 +123,7 @@ class PullRequest {
   }
 
   areAllApprovalsMet(fileOwners, reviews) {
-    const reviewersWhoApproved = reviews.filter(x => {
-      return x.state === 'approved';
-    }).map(x => x.username);
-    // If you're the author, then you yourself are assume to approve your own
-    // PR.
-    reviewersWhoApproved.push(this.author);
-
+    const reviewersWhoApproved = this.getReviewersWhoApproved(reviews);
     return Object.keys(fileOwners).every(path => {
       const fileOwner = fileOwners[path];
       const owner = fileOwner.owner;
@@ -136,6 +131,17 @@ class PullRequest {
       return _.intersection(owner.dirOwners, reviewersWhoApproved).length > 0;
     });
   }
+
+  getReviewersWhoApproved(reviews) {
+    const reviewersWhoApproved = reviews.filter(x => {
+      return x.state === 'approved';
+    }).map(x => x.username);
+    // If you're the author, then you yourself are assume to approve your own
+    // PR.
+    reviewersWhoApproved.push(this.author);
+    return reviewersWhoApproved;
+  }
+
 
   async createCheckRun(text, areApprovalsMet) {
     // We need to add a delay on the PR creation and check creation since
