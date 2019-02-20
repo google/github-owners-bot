@@ -18,6 +18,7 @@ const {RepoFile} = require('./repo-file');
 const {Owner} = require('./owner');
 const {Git} = require('./git');
 const _ = require('lodash');
+const sleep = require('sleep-promise');
 
 
 /**
@@ -137,6 +138,9 @@ class PullRequest {
   }
 
   async createCheckRun(text, areApprovalsMet) {
+    // We need to add a delay on the PR creation and check creation since
+    // GitHub might not be ready.
+    await sleep(2000);
     const conclusion = areApprovalsMet ? 'success' : 'failure';
     return this.github.checks.create(this.context.repo({
       name: this.name,

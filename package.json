@@ -18,6 +18,7 @@
   "dependencies": {
     "lodash": "4.17.11",
     "probot": "7.5.0",
+    "sleep-promise": "8.0.1",
     "yamljs": "0.3.0"
   },
   "devDependencies": {
