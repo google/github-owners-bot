@@ -136,7 +136,7 @@ class PullRequest {
     const reviewersWhoApproved = reviews.filter(x => {
       return x.state === 'approved';
     }).map(x => x.username);
-    // If you're the author, then you yourself are assume to approve your own
+    // If you're the author, then you yourself are assumed to approve your own
     // PR.
     reviewersWhoApproved.push(this.author);
     return reviewersWhoApproved;
