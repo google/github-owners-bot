@@ -34,7 +34,7 @@
         {
           "url": "https://api.github.com/repos/erwinmombay/amphtml/pulls/9",
           "id": 254442336,
-          "number": 9,
+          "number": 35,
           "head": {
             "ref": "test-again",
             "sha": "f73f33ef2005ee244695ee3445bd82c12ed37735",
@@ -147,7 +147,7 @@
   "repository": {
     "id": 43843790,
     "node_id": "MDEwOlJlcG9zaXRvcnk0Mzg0Mzc5MA==",
-    "name": "amphtml",
+    "name": "github-owners-bot-test-repo",
     "full_name": "erwinmombay/amphtml",
     "private": false,
     "owner": {

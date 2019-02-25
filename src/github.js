@@ -216,6 +216,12 @@ class PullRequest {
     this.context.log.debug('[buildCheckOutput]', text);
     return text;
   }
+
+  static async get(context, owner, repo, number) {
+    return await context.github.pullRequests.get(context.repo({
+      number,
+    }));
+  }
 }
 
 class PullRequestComment {
