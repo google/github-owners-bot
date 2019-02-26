@@ -206,13 +206,18 @@ class PullRequest {
    * @return {string}
    */
   buildCheckOutput(prInfo) {
-    let text = Object.values(prInfo.fileOwners).map(fileOwner => {
-      const fileOwnerHeader = `## possible reviewers: ${fileOwner.owner.dirOwners.join(',')}\n`;
-      const files = fileOwner.files.map(file => {
-        return ` - ${file.path}\n`;
-      });
-      return `\n${fileOwnerHeader}${files}`;
-    }).join('  ');
+    let text = Object.values(prInfo.fileOwners)
+      .filter(fileOwner => {
+        // Omit sections that has a required reviewer who has approved.
+        return !_.intersection(prInfo.reviewersWhoApproved,
+            fileOwner.owner.dirOwners).length;
+      }).map(fileOwner => {
+        const fileOwnerHeader = `## possible reviewers: ${fileOwner.owner.dirOwners.join(',')}\n`;
+        const files = fileOwner.files.map(file => {
+          return ` - ${file.path}\n`;
+        });
+        return `\n${fileOwnerHeader}${files}`;
+      }).join('  ');
     this.context.log.debug('[buildCheckOutput]', text);
     return text;
   }

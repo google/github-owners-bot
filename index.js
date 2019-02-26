@@ -5,6 +5,7 @@ module.exports = app => {
   app.on(['check_run.rerequested'], onCheckRunRerequest)
 
   async function onPullRequest(context) {
+    context.log.debug('IM HERE aaaa');
     // Only allow PR's from our fork
     const disallowed = !/repos\/(erwinmombay|rsimha)/.test(context.payload.pull_request.url);
     context.log.debug('[disallowed?]', disallowed, context.payload.pull_request.url);
@@ -16,6 +17,7 @@ module.exports = app => {
 
   async function onCheckRunRerequest(context) {
     const payload = context.payload;
+    context.log.debug('IM HERE bbb', payload);
     const pr = await PullRequest.get(context, payload.repository.owner.login,
       payload.repository.name, payload.check_run.check_suite.pull_requests[0].number);
 

@@ -6,6 +6,7 @@ const authorIsOwnerPayload = require('./fixtures/opened.author-is-owner')
 const filesPayload = require('./fixtures/files.35');
 const files36Payload = require('./fixtures/files.36');
 const reviewsPayload = require('./fixtures/reviews.35');
+const reviewsApprovedPayload = require('./fixtures/reviews.35.approved');
 const checkRunsPayload = require('./fixtures/check-runs.get.35');
 const emptyCheckRunsPayload = require('./fixtures/check-runs.get.35.empty');
 const checkRunsCreate = require('./fixtures/check-runs')
@@ -126,49 +127,6 @@ describe('owners bot', () => {
 
       await probot.receive({event: 'pull_request', payload});
     });
-
-    test('with passing check when author themselves are owners', async () => {
-
-      nock('https://api.github.com')
-        .post('/app/installations/588033/access_tokens')
-        .reply(200, {token: 'test'});
-
-      // We need the list of files on a pull request to evaluate the required
-      // reviewers.
-      nock('https://api.github.com')
-        .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/36/files')
-        .reply(200, files36Payload);
-
-      // We need the reviews to check if a pull request has been approved or
-      // not.
-      nock('https://api.github.com')
-        .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/36/reviews')
-        .reply(200, reviewsPayload);
-
-      nock('https://api.github.com')
-        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/erwinmombay-patch-4/check-runs')
-        .reply(200, emptyCheckRunsPayload);
-
-      //// Test that a check-run is created
-      nock('https://api.github.com')
-        .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
-          expect(body).toMatchObject({
-            name: 'AMP Owners bot',
-            head_branch: authorIsOwnerPayload.pull_request.head.ref,
-            head_sha: authorIsOwnerPayload.pull_request.head.sha,
-            status: 'completed',
-            conclusion: 'success',
-            output: {
-              title: 'AMP Owners bot reviewers check',
-              summary: 'The check was a success!',
-              text: '\n## possible reviewers: erwinmombay\n - ./dir2/new-file.txt\n',
-            }
-          });
-          return true;
-        }).reply(200);
-
-      await probot.receive({event: 'pull_request', payload: authorIsOwnerPayload});
-    });
   });
 
   describe('update check run', () => {
@@ -261,6 +219,95 @@ describe('owners bot', () => {
         }).reply(200);
 
       await probot.receive({event: 'check_run', payload: rerequestPayload});
+    });
+  });
+
+  describe('has approvals met', () => {
+
+    test('with passing check when there is 1 approver on a pull request', async () => {
+
+      nock('https://api.github.com')
+        .post('/app/installations/588033/access_tokens')
+        .reply(200, {token: 'test'});
+
+      // We need the list of files on a pull request to evaluate the required
+      // reviewers.
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
+        .reply(200, filesPayload);
+
+      // We need the reviews to check if a pull request has been approved or
+      // not.
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/reviews')
+        .reply(200, reviewsApprovedPayload);
+
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/ampprojectbot-patch-3/check-runs')
+        .reply(200, emptyCheckRunsPayload);
+
+      // Test that a check-run is created
+      nock('https://api.github.com')
+        .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
+          expect(body).toMatchObject({
+            name: 'AMP Owners bot',
+            head_branch: payload.pull_request.head.ref,
+            head_sha: payload.pull_request.head.sha,
+            status: 'completed',
+            conclusion: 'success',
+            output: {
+              title: 'AMP Owners bot reviewers check',
+              summary: 'The check was a success!',
+              text: '',
+            }
+          });
+          return true;
+        }).reply(200);
+
+      await probot.receive({event: 'pull_request', payload});
+    });
+
+    test('with passing check when author themselves are owners', async () => {
+
+      nock('https://api.github.com')
+        .post('/app/installations/588033/access_tokens')
+        .reply(200, {token: 'test'});
+
+      // We need the list of files on a pull request to evaluate the required
+      // reviewers.
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/36/files')
+        .reply(200, files36Payload);
+
+      // We need the reviews to check if a pull request has been approved or
+      // not.
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/36/reviews')
+        .reply(200, reviewsPayload);
+
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/erwinmombay-patch-4/check-runs')
+        .reply(200, emptyCheckRunsPayload);
+
+      //// Test that a check-run is created
+      nock('https://api.github.com')
+        .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
+          expect(body).toMatchObject({
+            name: 'AMP Owners bot',
+            head_branch: authorIsOwnerPayload.pull_request.head.ref,
+            head_sha: authorIsOwnerPayload.pull_request.head.sha,
+            status: 'completed',
+            conclusion: 'success',
+            output: {
+              title: 'AMP Owners bot reviewers check',
+              summary: 'The check was a success!',
+              text: '',
+            }
+          });
+          return true;
+        }).reply(200);
+
+      await probot.receive({event: 'pull_request', payload: authorIsOwnerPayload});
     });
   });
 });
