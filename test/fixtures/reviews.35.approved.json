@@ -1,0 +1,41 @@
+[
+    {
+        "id": 208194465,
+        "node_id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3MjA4MTk0NDY1",
+        "user": {
+            "login": "erwinmombay",
+            "id": 354746,
+            "node_id": "MDQ6VXNlcjM1NDc0Ng==",
+            "avatar_url": "https://avatars1.githubusercontent.com/u/354746?v=4",
+            "gravatar_id": "",
+            "url": "https://api.github.com/users/erwinmombay",
+            "html_url": "https://github.com/erwinmombay",
+            "followers_url": "https://api.github.com/users/erwinmombay/followers",
+            "following_url": "https://api.github.com/users/erwinmombay/following{/other_user}",
+            "gists_url": "https://api.github.com/users/erwinmombay/gists{/gist_id}",
+            "starred_url": "https://api.github.com/users/erwinmombay/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/erwinmombay/subscriptions",
+            "organizations_url": "https://api.github.com/users/erwinmombay/orgs",
+            "repos_url": "https://api.github.com/users/erwinmombay/repos",
+            "events_url": "https://api.github.com/users/erwinmombay/events{/privacy}",
+            "received_events_url": "https://api.github.com/users/erwinmombay/received_events",
+            "type": "User",
+            "site_admin": false
+        },
+        "body": "",
+        "state": "APPROVED",
+        "html_url": "https://github.com/erwinmombay/github-owners-bot-test-repo/pull/35#pullrequestreview-208194465",
+        "pull_request_url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo/pulls/35",
+        "author_association": "OWNER",
+        "_links": {
+            "html": {
+                "href": "https://github.com/erwinmombay/github-owners-bot-test-repo/pull/35#pullrequestreview-208194465"
+            },
+            "pull_request": {
+                "href": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo/pulls/35"
+            }
+        },
+        "submitted_at": "2019-02-26T20:39:13Z",
+        "commit_id": "9272f18514cbd3fa935b3ced62ae1c2bf6efa76d"
+    }
+]
