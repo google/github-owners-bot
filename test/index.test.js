@@ -11,7 +11,8 @@ const checkRunsPayload = require('./fixtures/check-runs.get.35');
 const emptyCheckRunsPayload = require('./fixtures/check-runs.get.35.empty');
 const checkRunsCreate = require('./fixtures/check-runs')
 const rerequestPayload = require('./fixtures/rerequested');
-const rerequestPullRequestPayload = require('./fixtures/rerequested.pull_request');
+const pullRequest35 = require('./fixtures/pull_request.35');
+const pullRequestReviewPayload = require('./fixtures/pull_request_review.submitted');
 const Git = require('../src/git').Git;
 const Owner = require('../src/owner').Owner;
 const sinon = require('sinon');
@@ -182,7 +183,7 @@ describe('owners bot', () => {
       // reviewers.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35')
-        .reply(200, rerequestPullRequestPayload);
+        .reply(200, pullRequest35);
 
       // We need the list of files on a pull request to evaluate the required
       // reviewers.
@@ -308,6 +309,56 @@ describe('owners bot', () => {
         }).reply(200);
 
       await probot.receive({event: 'pull_request', payload: authorIsOwnerPayload});
+    });
+  });
+
+  describe('pull request review', () => {
+
+    test('triggers pull request re-evaluation', async () => {
+
+      nock('https://api.github.com')
+        .post('/app/installations/588033/access_tokens')
+        .reply(200, {token: 'test'});
+
+
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35')
+        .reply(200, pullRequest35);
+      // We need the list of files on a pull request to evaluate the required
+      // reviewers.
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
+        .reply(200, filesPayload);
+
+      // We need the reviews to check if a pull request has been approved or
+      // not.
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/reviews')
+        .reply(200, reviewsApprovedPayload);
+
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/ampprojectbot-patch-3/check-runs')
+        .reply(200, emptyCheckRunsPayload);
+
+      // Test that a check-run is created
+      nock('https://api.github.com')
+        .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
+          expect(body).toMatchObject({
+            name: 'AMP Owners bot',
+            head_branch: payload.pull_request.head.ref,
+            head_sha: payload.pull_request.head.sha,
+            status: 'completed',
+            conclusion: 'success',
+            output: {
+              title: 'AMP Owners bot reviewers check',
+              summary: 'The check was a success!',
+              text: '',
+            }
+          });
+          return true;
+        }).reply(200);
+
+      await probot.receive({event: 'pull_request_review', payload: pullRequestReviewPayload});
     });
   });
 });
