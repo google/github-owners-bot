@@ -2,7 +2,8 @@ const PullRequest = require('./src/github').PullRequest;
 
 module.exports = app => {
   app.on(['pull_request.opened', 'pull_request.synchronized'], onPullRequest)
-  app.on(['check_run.rerequested'], onCheckRunRerequest)
+  app.on('check_run.rerequested', onCheckRunRerequest)
+  app.on('pull_request_review.submitted', onPullRequestReview);
 
   async function onPullRequest(context) {
     // Only allow PR's from our fork
@@ -25,5 +26,13 @@ module.exports = app => {
   async function processPullRequest(context, pullRequest) {
     const pr = new PullRequest(context, pullRequest);
     return await pr.processOpened();
+  }
+
+  async function onPullRequestReview(context) {
+    const payload = context.payload;
+    const pr = await PullRequest.get(context, payload.repository.owner.login,
+      payload.repository.name, payload.pull_request.number);
+
+    return await processPullRequest(context, pr.data);
   }
 }
