@@ -183,7 +183,7 @@ class PullRequest {
     const res = await this.github.checks.listForRef({
       owner: this.owner,
       repo: this.repo,
-      ref: this.headRef,
+      ref: this.headSha,
     });
     this.context.log.debug('[getCheckRun]', res);
     return res.data;
@@ -195,7 +195,7 @@ class PullRequest {
   hasCheckRun(checkRuns) {
     const hasCheckRun = checkRuns.total_count > 0;
     const [checkRun] = checkRuns.check_runs.filter(x => {
-      return x.head_sha === this.headSha;
+      return x.head_sha === this.headSha && /owners bot/i.test(x.name);
     });
     const tuple = {hasCheckRun: hasCheckRun && !!checkRun, checkRun};
     this.context.log.debug('[hasCheckRun]', tuple);
