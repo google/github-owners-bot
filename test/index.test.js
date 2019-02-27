@@ -312,7 +312,7 @@ describe('owners bot', () => {
     });
   });
 
-  describe.only('pull request review', () => {
+  describe('pull request review', () => {
 
     test('triggers pull request re-evaluation', async () => {
 
