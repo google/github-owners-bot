@@ -6,6 +6,11 @@ module.exports = app => {
   app.on('pull_request_review.submitted', onPullRequestReview);
 
   async function onPullRequest(context) {
+    context.log('hello world');
+    context.log('hello world');
+    context.log('hello world');
+    context.log('hello world');
+    context.log('hello world');
     return await processPullRequest(context, context.payload.pull_request);
   }
 
