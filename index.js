@@ -14,12 +14,6 @@ module.exports = app => {
   });
 
   async function onPullRequest(context) {
-    // Only allow PR's from our for
-    const disallowed = !/repos\/(erwinmombay|rsimha)/.test(context.payload.pull_request.url);
-    context.log.debug('[disallowed?]', disallowed, context.payload.pull_request.url);
-    if (disallowed) {
-      return;
-    }
     return await processPullRequest(context, context.payload.pull_request);
   }
 
