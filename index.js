@@ -4,6 +4,12 @@ module.exports = app => {
   app.on(['pull_request.opened', 'pull_request.synchronized'], onPullRequest)
   app.on('check_run.rerequested', onCheckRunRerequest)
   app.on('pull_request_review.submitted', onPullRequestReview);
+  app.log('initialized');
+  app.log('initialized');
+  app.log('initialized');
+  app.log('initialized');
+  app.log('initialized');
+  app.log('initialized');
 
   async function onPullRequest(context) {
     context.log('hello world');
