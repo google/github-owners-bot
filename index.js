@@ -4,19 +4,14 @@ module.exports = app => {
   app.on(['pull_request.opened', 'pull_request.synchronized'], onPullRequest)
   app.on('check_run.rerequested', onCheckRunRerequest)
   app.on('pull_request_review.submitted', onPullRequestReview);
-  app.log('initialized');
-  app.log('initialized');
-  app.log('initialized');
-  app.log('initialized');
-  app.log('initialized');
-  app.log('initialized');
+
+  app.log.target.addStream({
+    name: 'erwin-custom-stream',
+    stream: process.stdout,
+    level: 'trace'
+  });
 
   async function onPullRequest(context) {
-    context.log('hello world');
-    context.log('hello world');
-    context.log('hello world');
-    context.log('hello world');
-    context.log('hello world');
     return await processPullRequest(context, context.payload.pull_request);
   }
 
