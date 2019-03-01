@@ -6,12 +6,6 @@ module.exports = app => {
   app.on('pull_request_review.submitted', onPullRequestReview);
 
   async function onPullRequest(context) {
-    // Only allow PR's from our fork
-    const disallowed = !/repos\/(erwinmombay|rsimha)/.test(context.payload.pull_request.url);
-    context.log.debug('[disallowed?]', disallowed, context.payload.pull_request.url);
-    if (disallowed) {
-      return;
-    }
     return await processPullRequest(context, context.payload.pull_request);
   }
 
