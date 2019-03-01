@@ -5,10 +5,12 @@ module.exports = app => {
   app.on('check_run.rerequested', onCheckRunRerequest)
   app.on('pull_request_review.submitted', onPullRequestReview);
 
+  // Probot does not stream properly to GCE logs so we need to hook into
+  // bunyan explicitly and stream it to process.stdout.
   app.log.target.addStream({
-    name: 'erwin-custom-stream',
+    name: 'app-custom-stream',
     stream: process.stdout,
-    level: 'trace'
+    level: process.LOG_LEVEL || 'info',
   });
 
   async function onPullRequest(context) {
