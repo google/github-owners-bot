@@ -112,7 +112,7 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
           expect(body).toMatchObject({
-            name: 'AMP Owners bot',
+            name: 'ampproject/owners-check',
             head_branch: payload.pull_request.head.ref,
             head_sha: payload.pull_request.head.sha,
             status: 'completed',
@@ -205,7 +205,7 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
           expect(body).toMatchObject({
-            name: 'AMP Owners bot',
+            name: 'ampproject/owners-check',
             head_branch: payload.pull_request.head.ref,
             head_sha: payload.pull_request.head.sha,
             status: 'completed',
@@ -251,7 +251,7 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
           expect(body).toMatchObject({
-            name: 'AMP Owners bot',
+            name: 'ampproject/owners-check',
             head_branch: payload.pull_request.head.ref,
             head_sha: payload.pull_request.head.sha,
             status: 'completed',
@@ -294,7 +294,7 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
           expect(body).toMatchObject({
-            name: 'AMP Owners bot',
+            name: 'ampproject/owners-check',
             head_branch: authorIsOwnerPayload.pull_request.head.ref,
             head_sha: authorIsOwnerPayload.pull_request.head.sha,
             status: 'completed',
@@ -344,7 +344,7 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
           expect(body).toMatchObject({
-            name: 'AMP Owners bot',
+            name: 'ampproject/owners-check',
             head_branch: payload.pull_request.head.ref,
             head_sha: payload.pull_request.head.sha,
             status: 'completed',

@@ -28,7 +28,7 @@ class PullRequest {
 
   constructor(context, pr) {
 
-    this.name = 'AMP Owners bot';
+    this.name = 'ampproject/owners-check';
 
     this.git = new Git(context);
     this.context = context;

@@ -19,7 +19,7 @@
       "annotations_count": 0,
       "annotations_url": "https://api.github.com/repos/erwinmombay/amphtml/check-runs/65826077/annotations"
     },
-    "name": "AMP Owners bot",
+    "name": "ampproject/owners-check",
     "check_suite": {
       "id": 66518117,
       "node_id": "MDEwOkNoZWNrU3VpdGU2NjUxODExNw==",
