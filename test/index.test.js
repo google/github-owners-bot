@@ -4,6 +4,7 @@ const {Probot} = require('probot')
 const payload = require('./fixtures/opened-4')
 const authorIsOwnerPayload = require('./fixtures/opened.author-is-owner')
 const filesPayload = require('./fixtures/files.35');
+const multipleFilesPayload = require('./fixtures/files.35.multiple');
 const files36Payload = require('./fixtures/files.36');
 const reviewsPayload = require('./fixtures/reviews.35');
 const reviewsApprovedPayload = require('./fixtures/reviews.35.approved');
@@ -87,7 +88,7 @@ describe('owners bot', () => {
 
   describe('when there are more than 1 checks on a PR', () => {
 
-    test.only('it should update amp owners bot check when there is one', async () => {
+    test('it should update amp owners bot check when there is one', async () => {
 
       nock('https://api.github.com')
         .post('/app/installations/588033/access_tokens')
@@ -207,6 +208,45 @@ describe('owners bot', () => {
               title: 'ampproject/owners-check',
               summary: 'The check was a failure!',
               text: '\n## possible reviewers: erwinmombay\n - ./dir2/dir1/dir1/file.txt\n',
+            }
+          });
+          return true;
+        }).reply(200);
+
+      await probot.receive({event: 'pull_request', payload});
+    });
+
+    test('with failure check when there are 0 reviews on a pull request and multiple files', async () => {
+
+      nock('https://api.github.com')
+        .post('/app/installations/588033/access_tokens')
+        .reply(200, {token: 'test'});
+
+      // We need the list of files on a pull request to evaluate the required
+      // reviewers.
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
+        .reply(200, multipleFilesPayload);
+
+      // We need the reviews to check if a pull request has been approved or
+      // not.
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/reviews')
+        .reply(200, reviewsPayload);
+
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/check-runs')
+        .reply(200, checkRunsPayload);
+
+      // Test that a check-run is created
+      nock('https://api.github.com')
+        .patch('/repos/erwinmombay/github-owners-bot-test-repo/check-runs/53472313', body => {
+          expect(body).toMatchObject({
+            conclusion: 'failure',
+            output: {
+              title: 'ampproject/owners-check',
+              summary: 'The check was a failure!',
+              text: '\n## possible reviewers: erwinmombay\n - ./dir2/dir1/dir1/file.txt\n - ./dir2/dir1/dir1/file-2.txt\n',
             }
           });
           return true;
