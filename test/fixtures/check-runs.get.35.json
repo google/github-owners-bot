@@ -20,7 +20,7 @@
                 "annotations_count": 0,
                 "annotations_url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo/check-runs/53472313/annotations"
             },
-            "name": "My app!",
+            "name": "ampproject/owners-check",
             "check_suite": {
                 "id": 52508974
             },

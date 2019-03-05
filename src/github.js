@@ -30,6 +30,8 @@ class PullRequest {
 
     this.name = 'ampproject/owners-check';
 
+    this.nameMatcher = new RegExp('owners bot|owners-check', 'i');
+
     this.git = new Git(context);
     this.context = context;
     this.github = context.github;
@@ -156,7 +158,7 @@ class PullRequest {
       conclusion,
       completed_at: new Date(),
       output: {
-        title: `${this.name} reviewers check`,
+        title: this.name,
         summary: `The check was a ${conclusion}!`,
         text,
       }
@@ -170,9 +172,10 @@ class PullRequest {
       check_run_id: checkRun.id,
       status: 'completed',
       conclusion,
+      name: this.name,
       completed_at: new Date(),
       output: {
-        title: `${this.name} reviewers check`,
+        title: this.name,
         summary: `The check was a ${conclusion}!`,
         text,
       }
@@ -183,7 +186,7 @@ class PullRequest {
     const res = await this.github.checks.listForRef({
       owner: this.owner,
       repo: this.repo,
-      ref: this.headRef,
+      ref: this.headSha,
     });
     this.context.log.debug('[getCheckRun]', res);
     return res.data;
@@ -195,7 +198,7 @@ class PullRequest {
   hasCheckRun(checkRuns) {
     const hasCheckRun = checkRuns.total_count > 0;
     const [checkRun] = checkRuns.check_runs.filter(x => {
-      return x.head_sha === this.headSha;
+      return x.head_sha === this.headSha && this.nameMatcher.test(x.name);
     });
     const tuple = {hasCheckRun: hasCheckRun && !!checkRun, checkRun};
     this.context.log.debug('[hasCheckRun]', tuple);
@@ -217,7 +220,7 @@ class PullRequest {
           return ` - ${file.path}\n`;
         });
         return `\n${fileOwnerHeader}${files}`;
-      }).join('  ');
+      }).join('');
     this.context.log.debug('[buildCheckOutput]', text);
     return text;
   }

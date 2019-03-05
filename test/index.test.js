@@ -8,8 +8,9 @@ const files36Payload = require('./fixtures/files.36');
 const reviewsPayload = require('./fixtures/reviews.35');
 const reviewsApprovedPayload = require('./fixtures/reviews.35.approved');
 const checkRunsPayload = require('./fixtures/check-runs.get.35');
+const multipleCheckRunsPayload = require('./fixtures/check-runs.get.35.multiple');
 const emptyCheckRunsPayload = require('./fixtures/check-runs.get.35.empty');
-const checkRunsCreate = require('./fixtures/check-runs')
+const checkRunsCreate = require('./fixtures/check-runs');
 const rerequestPayload = require('./fixtures/rerequested');
 const pullRequest35 = require('./fixtures/pull_request.35');
 const pullRequestReviewPayload = require('./fixtures/pull_request_review.submitted');
@@ -84,6 +85,48 @@ describe('owners bot', () => {
     sandbox.restore();
   });
 
+  describe('when there are more than 1 checks on a PR', () => {
+
+    test.only('it should update amp owners bot check when there is one', async () => {
+
+      nock('https://api.github.com')
+        .post('/app/installations/588033/access_tokens')
+        .reply(200, {token: 'test'});
+
+      // We need the list of files on a pull request to evaluate the required
+      // reviewers.
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
+        .reply(200, filesPayload);
+
+      // We need the reviews to check if a pull request has been approved or
+      // not.
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/reviews')
+        .reply(200, reviewsPayload);
+
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/check-runs')
+        .reply(200, multipleCheckRunsPayload);
+
+      // Test that a check-run is created
+      nock('https://api.github.com')
+        .patch('/repos/erwinmombay/github-owners-bot-test-repo/check-runs/53472315', body => {
+          expect(body).toMatchObject({
+            conclusion: 'failure',
+            output: {
+              title: 'ampproject/owners-check',
+              summary: 'The check was a failure!',
+              text: '\n## possible reviewers: erwinmombay\n - ./dir2/dir1/dir1/file.txt\n',
+            }
+          });
+          return true;
+        }).reply(200);
+
+      await probot.receive({event: 'pull_request', payload});
+    });
+  });
+
   describe('create check run', () => {
 
     test('with failure check when there are 0 reviews on a pull request', async () => {
@@ -104,8 +147,9 @@ describe('owners bot', () => {
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/reviews')
         .reply(200, reviewsPayload);
 
+      // Get check runs for a specific commit
       nock('https://api.github.com')
-        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/ampprojectbot-patch-3/check-runs')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/check-runs')
         .reply(200, emptyCheckRunsPayload);
 
       // Test that a check-run is created
@@ -118,7 +162,7 @@ describe('owners bot', () => {
             status: 'completed',
             conclusion: 'failure',
             output: {
-              title: 'AMP Owners bot reviewers check',
+              title: 'ampproject/owners-check',
               summary: 'The check was a failure!',
               text: '\n## possible reviewers: erwinmombay\n - ./dir2/dir1/dir1/file.txt\n',
             }
@@ -151,7 +195,7 @@ describe('owners bot', () => {
         .reply(200, reviewsPayload);
 
       nock('https://api.github.com')
-        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/ampprojectbot-patch-3/check-runs')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/check-runs')
         .reply(200, checkRunsPayload);
 
       // Test that a check-run is created
@@ -160,7 +204,7 @@ describe('owners bot', () => {
           expect(body).toMatchObject({
             conclusion: 'failure',
             output: {
-              title: 'AMP Owners bot reviewers check',
+              title: 'ampproject/owners-check',
               summary: 'The check was a failure!',
               text: '\n## possible reviewers: erwinmombay\n - ./dir2/dir1/dir1/file.txt\n',
             }
@@ -198,7 +242,7 @@ describe('owners bot', () => {
         .reply(200, reviewsPayload);
 
       nock('https://api.github.com')
-        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/ampprojectbot-patch-3/check-runs')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/check-runs')
         .reply(200, emptyCheckRunsPayload);
 
       // Test that a check-run is created
@@ -211,7 +255,7 @@ describe('owners bot', () => {
             status: 'completed',
             conclusion: 'failure',
             output: {
-              title: 'AMP Owners bot reviewers check',
+              title: 'ampproject/owners-check',
               summary: 'The check was a failure!',
               text: '\n## possible reviewers: erwinmombay\n - ./dir2/dir1/dir1/file.txt\n',
             }
@@ -244,7 +288,7 @@ describe('owners bot', () => {
         .reply(200, reviewsApprovedPayload);
 
       nock('https://api.github.com')
-        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/ampprojectbot-patch-3/check-runs')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/check-runs')
         .reply(200, emptyCheckRunsPayload);
 
       // Test that a check-run is created
@@ -257,7 +301,7 @@ describe('owners bot', () => {
             status: 'completed',
             conclusion: 'success',
             output: {
-              title: 'AMP Owners bot reviewers check',
+              title: 'ampproject/owners-check',
               summary: 'The check was a success!',
               text: '',
             }
@@ -287,7 +331,7 @@ describe('owners bot', () => {
         .reply(200, reviewsPayload);
 
       nock('https://api.github.com')
-        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/erwinmombay-patch-4/check-runs')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/c7fdbd7f947fca608b20006da8535af5384ab699/check-runs')
         .reply(200, emptyCheckRunsPayload);
 
       //// Test that a check-run is created
@@ -300,7 +344,7 @@ describe('owners bot', () => {
             status: 'completed',
             conclusion: 'success',
             output: {
-              title: 'AMP Owners bot reviewers check',
+              title: 'ampproject/owners-check',
               summary: 'The check was a success!',
               text: '',
             }
@@ -337,7 +381,7 @@ describe('owners bot', () => {
         .reply(200, reviewsApprovedPayload);
 
       nock('https://api.github.com')
-        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/ampprojectbot-patch-3/check-runs')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/check-runs')
         .reply(200, emptyCheckRunsPayload);
 
       // Test that a check-run is created
@@ -350,7 +394,7 @@ describe('owners bot', () => {
             status: 'completed',
             conclusion: 'success',
             output: {
-              title: 'AMP Owners bot reviewers check',
+              title: 'ampproject/owners-check',
               summary: 'The check was a success!',
               text: '',
             }

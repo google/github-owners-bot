@@ -1,0 +1,163 @@
+{
+    "total_count": 1,
+    "check_runs": [
+        {
+            "id": 53472315,
+            "node_id": "MDg6Q2hlY2tSdW41MzQ3MjMxMw==",
+            "head_sha": "9272f18514cbd3fa935b3ced62ae1c2bf6efa76d",
+            "external_id": "",
+            "url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo/check-runs/53472313",
+            "html_url": "https://github.com/erwinmombay/github-owners-bot-test-repo/runs/53472313",
+            "details_url": "https://www.ampproject.org",
+            "status": "completed",
+            "conclusion": "failure",
+            "started_at": "2019-01-23T03:33:53Z",
+            "completed_at": "2019-01-23T03:33:52Z",
+            "output": {
+                "title": "Probot check!",
+                "summary": "The check has passed!",
+                "text": null,
+                "annotations_count": 0,
+                "annotations_url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo/check-runs/53472313/annotations"
+            },
+            "name": "ampproject/owners-check",
+            "check_suite": {
+                "id": 52508974
+            },
+            "app": {
+                "id": 22611,
+                "node_id": "MDM6QXBwMjI2MTE=",
+                "owner": {
+                    "login": "ampprojectbot",
+                    "id": 23269078,
+                    "node_id": "MDQ6VXNlcjIzMjY5MDc4",
+                    "avatar_url": "https://avatars3.githubusercontent.com/u/23269078?v=4",
+                    "gravatar_id": "",
+                    "url": "https://api.github.com/users/ampprojectbot",
+                    "html_url": "https://github.com/ampprojectbot",
+                    "followers_url": "https://api.github.com/users/ampprojectbot/followers",
+                    "following_url": "https://api.github.com/users/ampprojectbot/following{/other_user}",
+                    "gists_url": "https://api.github.com/users/ampprojectbot/gists{/gist_id}",
+                    "starred_url": "https://api.github.com/users/ampprojectbot/starred{/owner}{/repo}",
+                    "subscriptions_url": "https://api.github.com/users/ampprojectbot/subscriptions",
+                    "organizations_url": "https://api.github.com/users/ampprojectbot/orgs",
+                    "repos_url": "https://api.github.com/users/ampprojectbot/repos",
+                    "events_url": "https://api.github.com/users/ampprojectbot/events{/privacy}",
+                    "received_events_url": "https://api.github.com/users/ampprojectbot/received_events",
+                    "type": "User",
+                    "site_admin": false
+                },
+                "name": "amp-owners-bot",
+                "description": "A bot that verifies that all \"owners\" of a file set has approved a pull request.\r\n\r\nusers OWNERS.yaml files in a repository to find the set of owners.",
+                "external_url": "https://www.ampproject.org",
+                "html_url": "https://github.com/apps/amp-owners-bot",
+                "created_at": "2018-12-20T18:50:10Z",
+                "updated_at": "2019-01-18T19:48:17Z"
+            },
+            "pull_requests": [
+                {
+                    "url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo/pulls/35",
+                    "id": 246688458,
+                    "number": 35,
+                    "head": {
+                        "ref": "ampprojectbot-patch-3",
+                        "sha": "9272f18514cbd3fa935b3ced62ae1c2bf6efa76d",
+                        "repo": {
+                            "id": 72889098,
+                            "url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo",
+                            "name": "github-owners-bot-test-repo"
+                        }
+                    },
+                    "base": {
+                        "ref": "master",
+                        "sha": "e896a1ed550e296573e46bcb7d0ab23afa3bbedf",
+                        "repo": {
+                            "id": 72889098,
+                            "url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo",
+                            "name": "github-owners-bot-test-repo"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "id": 53472313,
+            "node_id": "MDg6Q2hlY2tSdW41MzQ3MjMxMw==",
+            "head_sha": "9272f18514cbd3fa935b3ced62ae1c2bf6efa76d",
+            "external_id": "",
+            "url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo/check-runs/53472313",
+            "html_url": "https://github.com/erwinmombay/github-owners-bot-test-repo/runs/53472313",
+            "details_url": "https://www.ampproject.org",
+            "status": "completed",
+            "conclusion": "failure",
+            "started_at": "2019-01-23T03:33:53Z",
+            "completed_at": "2019-01-23T03:33:52Z",
+            "output": {
+                "title": "Probot check!",
+                "summary": "The check has passed!",
+                "text": null,
+                "annotations_count": 0,
+                "annotations_url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo/check-runs/53472313/annotations"
+            },
+            "name": "some other check from the same bot",
+            "check_suite": {
+                "id": 52508974
+            },
+            "app": {
+                "id": 22611,
+                "node_id": "MDM6QXBwMjI2MTE=",
+                "owner": {
+                    "login": "ampprojectbot",
+                    "id": 23269078,
+                    "node_id": "MDQ6VXNlcjIzMjY5MDc4",
+                    "avatar_url": "https://avatars3.githubusercontent.com/u/23269078?v=4",
+                    "gravatar_id": "",
+                    "url": "https://api.github.com/users/ampprojectbot",
+                    "html_url": "https://github.com/ampprojectbot",
+                    "followers_url": "https://api.github.com/users/ampprojectbot/followers",
+                    "following_url": "https://api.github.com/users/ampprojectbot/following{/other_user}",
+                    "gists_url": "https://api.github.com/users/ampprojectbot/gists{/gist_id}",
+                    "starred_url": "https://api.github.com/users/ampprojectbot/starred{/owner}{/repo}",
+                    "subscriptions_url": "https://api.github.com/users/ampprojectbot/subscriptions",
+                    "organizations_url": "https://api.github.com/users/ampprojectbot/orgs",
+                    "repos_url": "https://api.github.com/users/ampprojectbot/repos",
+                    "events_url": "https://api.github.com/users/ampprojectbot/events{/privacy}",
+                    "received_events_url": "https://api.github.com/users/ampprojectbot/received_events",
+                    "type": "User",
+                    "site_admin": false
+                },
+                "name": "amp-owners-bot",
+                "description": "A bot that verifies that all \"owners\" of a file set has approved a pull request.\r\n\r\nusers OWNERS.yaml files in a repository to find the set of owners.",
+                "external_url": "https://www.ampproject.org",
+                "html_url": "https://github.com/apps/amp-owners-bot",
+                "created_at": "2018-12-20T18:50:10Z",
+                "updated_at": "2019-01-18T19:48:17Z"
+            },
+            "pull_requests": [
+                {
+                    "url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo/pulls/35",
+                    "id": 246688458,
+                    "number": 35,
+                    "head": {
+                        "ref": "ampprojectbot-patch-3",
+                        "sha": "9272f18514cbd3fa935b3ced62ae1c2bf6efa76d",
+                        "repo": {
+                            "id": 72889098,
+                            "url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo",
+                            "name": "github-owners-bot-test-repo"
+                        }
+                    },
+                    "base": {
+                        "ref": "master",
+                        "sha": "e896a1ed550e296573e46bcb7d0ab23afa3bbedf",
+                        "repo": {
+                            "id": 72889098,
+                            "url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo",
+                            "name": "github-owners-bot-test-repo"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
