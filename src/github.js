@@ -155,7 +155,7 @@ class PullRequest {
       head_branch: this.headRef,
       head_sha: this.headSha,
       status: 'completed',
-      conclusion,
+      conclusion: 'neutral',
       completed_at: new Date(),
       output: {
         title: this.name,
@@ -171,7 +171,7 @@ class PullRequest {
     return this.github.checks.update(this.context.repo({
       check_run_id: checkRun.id,
       status: 'completed',
-      conclusion,
+      conclusion: 'neutral',
       name: this.name,
       completed_at: new Date(),
       output: {
