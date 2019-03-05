@@ -114,7 +114,8 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .patch('/repos/erwinmombay/github-owners-bot-test-repo/check-runs/53472315', body => {
           expect(body).toMatchObject({
-            conclusion: 'failure',
+            //conclusion: 'failure',
+            conclusion: 'neutral',
             output: {
               title: 'ampproject/owners-check',
               summary: 'The check was a failure!',
@@ -161,7 +162,8 @@ describe('owners bot', () => {
             head_branch: payload.pull_request.head.ref,
             head_sha: payload.pull_request.head.sha,
             status: 'completed',
-            conclusion: 'failure',
+            //conclusion: 'failure',
+            conclusion: 'neutral',
             output: {
               title: 'ampproject/owners-check',
               summary: 'The check was a failure!',
@@ -203,7 +205,8 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .patch('/repos/erwinmombay/github-owners-bot-test-repo/check-runs/53472313', body => {
           expect(body).toMatchObject({
-            conclusion: 'failure',
+            //conclusion: 'failure',
+            conclusion: 'neutral',
             output: {
               title: 'ampproject/owners-check',
               summary: 'The check was a failure!',
@@ -242,7 +245,8 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .patch('/repos/erwinmombay/github-owners-bot-test-repo/check-runs/53472313', body => {
           expect(body).toMatchObject({
-            conclusion: 'failure',
+            //conclusion: 'failure',
+            conclusion: 'neutral',
             output: {
               title: 'ampproject/owners-check',
               summary: 'The check was a failure!',
@@ -293,7 +297,8 @@ describe('owners bot', () => {
             head_branch: payload.pull_request.head.ref,
             head_sha: payload.pull_request.head.sha,
             status: 'completed',
-            conclusion: 'failure',
+            //conclusion: 'failure',
+            conclusion: 'neutral',
             output: {
               title: 'ampproject/owners-check',
               summary: 'The check was a failure!',
@@ -339,7 +344,8 @@ describe('owners bot', () => {
             head_branch: payload.pull_request.head.ref,
             head_sha: payload.pull_request.head.sha,
             status: 'completed',
-            conclusion: 'success',
+            //conclusion: 'success',
+            conclusion: 'neutral',
             output: {
               title: 'ampproject/owners-check',
               summary: 'The check was a success!',
@@ -382,7 +388,8 @@ describe('owners bot', () => {
             head_branch: authorIsOwnerPayload.pull_request.head.ref,
             head_sha: authorIsOwnerPayload.pull_request.head.sha,
             status: 'completed',
-            conclusion: 'success',
+            //conclusion: 'success',
+            conclusion: 'neutral',
             output: {
               title: 'ampproject/owners-check',
               summary: 'The check was a success!',
@@ -432,7 +439,8 @@ describe('owners bot', () => {
             head_branch: payload.pull_request.head.ref,
             head_sha: payload.pull_request.head.sha,
             status: 'completed',
-            conclusion: 'success',
+            //conclusion: 'success',
+            conclusion: 'neutral',
             output: {
               title: 'ampproject/owners-check',
               summary: 'The check was a success!',
