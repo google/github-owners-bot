@@ -1,0 +1,26 @@
+[
+    {
+        "sha": "eeae1593f4ecbae3f4453c9ceee2940a0e98ddca",
+        "filename": "dir2/dir1/dir1/file.txt",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 0,
+        "changes": 1,
+        "blob_url": "https://github.com/erwinmombay/github-owners-bot-test-repo/blob/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/dir2/dir1/dir1/file.txt",
+        "raw_url": "https://github.com/erwinmombay/github-owners-bot-test-repo/raw/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/dir2/dir1/dir1/file.txt",
+        "contents_url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo/contents/dir2/dir1/dir1/file.txt?ref=9272f18514cbd3fa935b3ced62ae1c2bf6efa76d",
+        "patch": "@@ -1 +1,2 @@\n test again\r\n+again\r"
+    },
+    {
+        "sha": "eeae1593f4ecbae3f4453c9ceee2940a0e98ddcx",
+        "filename": "dir2/dir1/dir1/file-2.txt",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 0,
+        "changes": 1,
+        "blob_url": "https://github.com/erwinmombay/github-owners-bot-test-repo/blob/9272f18514cbd3fa935b3ced62ae1c2bf6efa76x/dir2/dir1/dir1/file-2.txt",
+        "raw_url": "https://github.com/erwinmombay/github-owners-bot-test-repo/raw/9272f18514cbd3fa935b3ced62ae1c2bf6efa76x/dir2/dir1/dir1/file-2.txt",
+        "contents_url": "https://api.github.com/repos/erwinmombay/github-owners-bot-test-repo/contents/dir2/dir1/dir1/file.txt?ref=9272f18514cbd3fa935b3ced62ae1c2bf6efa76x",
+        "patch": "@@ -1 +1,2 @@\n test again on another file\r\n+again\r"
+    }
+]

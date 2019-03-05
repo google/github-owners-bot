@@ -215,11 +215,11 @@ class PullRequest {
         return !_.intersection(prInfo.reviewersWhoApproved,
             fileOwner.owner.dirOwners).length;
       }).map(fileOwner => {
-        const fileOwnerHeader = `## possible reviewers: ${fileOwner.owner.dirOwners.join(',')}\n`;
+        const fileOwnerHeader = `## possible reviewers: ${fileOwner.owner.dirOwners.join(', ')}`;
         const files = fileOwner.files.map(file => {
           return ` - ${file.path}\n`;
-        });
-        return `\n${fileOwnerHeader}${files}`;
+        }).join('');
+        return `\n${fileOwnerHeader}\n${files}`;
       }).join('');
     this.context.log.debug('[buildCheckOutput]', text);
     return text;
