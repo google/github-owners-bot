@@ -1,23 +1,29 @@
 const nock = require('nock')
 const owners = require('..')
 const {Probot} = require('probot')
-const payload = require('./fixtures/opened-4')
-const authorIsOwnerPayload = require('./fixtures/opened.author-is-owner')
-const filesPayload = require('./fixtures/files.35');
-const multipleFilesPayload = require('./fixtures/files.35.multiple');
-const files36Payload = require('./fixtures/files.36');
-const reviewsPayload = require('./fixtures/reviews.35');
-const reviewsApprovedPayload = require('./fixtures/reviews.35.approved');
-const checkRunsPayload = require('./fixtures/check-runs.get.35');
-const multipleCheckRunsPayload = require('./fixtures/check-runs.get.35.multiple');
-const emptyCheckRunsPayload = require('./fixtures/check-runs.get.35.empty');
-const checkRunsCreate = require('./fixtures/check-runs');
-const rerequestPayload = require('./fixtures/rerequested');
-const pullRequest35 = require('./fixtures/pull_request.35');
-const pullRequestReviewPayload = require('./fixtures/pull_request_review.submitted');
 const Git = require('../src/git').Git;
 const Owner = require('../src/owner').Owner;
 const sinon = require('sinon');
+
+const opened35 = require('./fixtures/actions/opened.35')
+const opened36 = require('./fixtures/actions/opened.36.author-is-owner')
+const rerequest35 = require('./fixtures/actions/rerequested.35');
+const review35 = require('./fixtures/actions/pull_request_review.35.submitted');
+
+const files35 = require('./fixtures/files/files.35');
+const files35Multiple = require('./fixtures/files/files.35.multiple');
+const files36 = require('./fixtures/files/files.36');
+
+const reviews35 = require('./fixtures/reviews/reviews.35');
+const reviews35Approved = require('./fixtures/reviews/reviews.35.approved');
+
+const checkruns35 = require('./fixtures/check-runs/check-runs.get.35');
+const checkruns35Multiple = require('./fixtures/check-runs/check-runs.get.35.multiple');
+const checkruns35Empty = require('./fixtures/check-runs/check-runs.get.35.empty');
+const checkRunsCreate = require('./fixtures/check-runs/check-runs.create');
+
+const pullRequest35 = require('./fixtures/pulls/pull_request.35');
+
 
 nock.disableNetConnect();
 jest.setTimeout(30000);
@@ -98,17 +104,17 @@ describe('owners bot', () => {
       // reviewers.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
-        .reply(200, filesPayload);
+        .reply(200, files35);
 
       // We need the reviews to check if a pull request has been approved or
       // not.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/reviews')
-        .reply(200, reviewsPayload);
+        .reply(200, reviews35);
 
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/check-runs')
-        .reply(200, multipleCheckRunsPayload);
+        .reply(200, checkruns35Multiple);
 
       // Test that a check-run is created
       nock('https://api.github.com')
@@ -125,7 +131,7 @@ describe('owners bot', () => {
           return true;
         }).reply(200);
 
-      await probot.receive({event: 'pull_request', payload});
+      await probot.receive({event: 'pull_request', payload: opened35});
     });
   });
 
@@ -141,26 +147,26 @@ describe('owners bot', () => {
       // reviewers.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
-        .reply(200, filesPayload);
+        .reply(200, files35);
 
       // We need the reviews to check if a pull request has been approved or
       // not.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/reviews')
-        .reply(200, reviewsPayload);
+        .reply(200, reviews35);
 
       // Get check runs for a specific commit
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/check-runs')
-        .reply(200, emptyCheckRunsPayload);
+        .reply(200, checkruns35Empty);
 
       // Test that a check-run is created
       nock('https://api.github.com')
         .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
           expect(body).toMatchObject({
             name: 'ampproject/owners-check',
-            head_branch: payload.pull_request.head.ref,
-            head_sha: payload.pull_request.head.sha,
+            head_branch: opened35.pull_request.head.ref,
+            head_sha: opened35.pull_request.head.sha,
             status: 'completed',
             //conclusion: 'failure',
             conclusion: 'neutral',
@@ -173,7 +179,7 @@ describe('owners bot', () => {
           return true;
         }).reply(200);
 
-      await probot.receive({event: 'pull_request', payload});
+      await probot.receive({event: 'pull_request', payload: opened35});
     });
   });
 
@@ -189,17 +195,17 @@ describe('owners bot', () => {
       // reviewers.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
-        .reply(200, filesPayload);
+        .reply(200, files35);
 
       // We need the reviews to check if a pull request has been approved or
       // not.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/reviews')
-        .reply(200, reviewsPayload);
+        .reply(200, reviews35);
 
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/check-runs')
-        .reply(200, checkRunsPayload);
+        .reply(200, checkruns35);
 
       // Test that a check-run is created
       nock('https://api.github.com')
@@ -216,7 +222,7 @@ describe('owners bot', () => {
           return true;
         }).reply(200);
 
-      await probot.receive({event: 'pull_request', payload});
+      await probot.receive({event: 'pull_request', payload: opened35});
     });
 
     test('with failure check when there are 0 reviews on a pull request and multiple files', async () => {
@@ -229,17 +235,17 @@ describe('owners bot', () => {
       // reviewers.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
-        .reply(200, multipleFilesPayload);
+        .reply(200, files35Multiple);
 
       // We need the reviews to check if a pull request has been approved or
       // not.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/reviews')
-        .reply(200, reviewsPayload);
+        .reply(200, reviews35);
 
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/check-runs')
-        .reply(200, checkRunsPayload);
+        .reply(200, checkruns35);
 
       // Test that a check-run is created
       nock('https://api.github.com')
@@ -256,7 +262,7 @@ describe('owners bot', () => {
           return true;
         }).reply(200);
 
-      await probot.receive({event: 'pull_request', payload});
+      await probot.receive({event: 'pull_request', payload: opened35});
     });
   });
 
@@ -277,25 +283,25 @@ describe('owners bot', () => {
       // reviewers.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
-        .reply(200, filesPayload);
+        .reply(200, files35);
 
       // We need the reviews to check if a pull request has been approved or
       // not.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/reviews')
-        .reply(200, reviewsPayload);
+        .reply(200, reviews35);
 
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/check-runs')
-        .reply(200, emptyCheckRunsPayload);
+        .reply(200, checkruns35Empty);
 
       // Test that a check-run is created
       nock('https://api.github.com')
         .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
           expect(body).toMatchObject({
             name: 'ampproject/owners-check',
-            head_branch: payload.pull_request.head.ref,
-            head_sha: payload.pull_request.head.sha,
+            head_branch: opened35.pull_request.head.ref,
+            head_sha: opened35.pull_request.head.sha,
             status: 'completed',
             //conclusion: 'failure',
             conclusion: 'neutral',
@@ -308,7 +314,7 @@ describe('owners bot', () => {
           return true;
         }).reply(200);
 
-      await probot.receive({event: 'check_run', payload: rerequestPayload});
+      await probot.receive({event: 'check_run', payload: rerequest35});
     });
   });
 
@@ -324,25 +330,25 @@ describe('owners bot', () => {
       // reviewers.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
-        .reply(200, filesPayload);
+        .reply(200, files35);
 
       // We need the reviews to check if a pull request has been approved or
       // not.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/reviews')
-        .reply(200, reviewsApprovedPayload);
+        .reply(200, reviews35Approved);
 
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/check-runs')
-        .reply(200, emptyCheckRunsPayload);
+        .reply(200, checkruns35Empty);
 
       // Test that a check-run is created
       nock('https://api.github.com')
         .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
           expect(body).toMatchObject({
             name: 'ampproject/owners-check',
-            head_branch: payload.pull_request.head.ref,
-            head_sha: payload.pull_request.head.sha,
+            head_branch: opened35.pull_request.head.ref,
+            head_sha: opened35.pull_request.head.sha,
             status: 'completed',
             //conclusion: 'success',
             conclusion: 'neutral',
@@ -355,7 +361,7 @@ describe('owners bot', () => {
           return true;
         }).reply(200);
 
-      await probot.receive({event: 'pull_request', payload});
+      await probot.receive({event: 'pull_request', payload: opened35});
     });
 
     test('with passing check when author themselves are owners', async () => {
@@ -368,25 +374,25 @@ describe('owners bot', () => {
       // reviewers.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/36/files')
-        .reply(200, files36Payload);
+        .reply(200, files36);
 
       // We need the reviews to check if a pull request has been approved or
       // not.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/36/reviews')
-        .reply(200, reviewsPayload);
+        .reply(200, reviews35);
 
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/c7fdbd7f947fca608b20006da8535af5384ab699/check-runs')
-        .reply(200, emptyCheckRunsPayload);
+        .reply(200, checkruns35Empty);
 
       //// Test that a check-run is created
       nock('https://api.github.com')
         .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
           expect(body).toMatchObject({
             name: 'ampproject/owners-check',
-            head_branch: authorIsOwnerPayload.pull_request.head.ref,
-            head_sha: authorIsOwnerPayload.pull_request.head.sha,
+            head_branch: opened36.pull_request.head.ref,
+            head_sha: opened36.pull_request.head.sha,
             status: 'completed',
             //conclusion: 'success',
             conclusion: 'neutral',
@@ -399,7 +405,7 @@ describe('owners bot', () => {
           return true;
         }).reply(200);
 
-      await probot.receive({event: 'pull_request', payload: authorIsOwnerPayload});
+      await probot.receive({event: 'pull_request', payload: opened36});
     });
   });
 
@@ -419,25 +425,25 @@ describe('owners bot', () => {
       // reviewers.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
-        .reply(200, filesPayload);
+        .reply(200, files35);
 
       // We need the reviews to check if a pull request has been approved or
       // not.
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/reviews')
-        .reply(200, reviewsApprovedPayload);
+        .reply(200, reviews35Approved);
 
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/commits/9272f18514cbd3fa935b3ced62ae1c2bf6efa76d/check-runs')
-        .reply(200, emptyCheckRunsPayload);
+        .reply(200, checkruns35Empty);
 
       // Test that a check-run is created
       nock('https://api.github.com')
         .post('/repos/erwinmombay/github-owners-bot-test-repo/check-runs', body => {
           expect(body).toMatchObject({
             name: 'ampproject/owners-check',
-            head_branch: payload.pull_request.head.ref,
-            head_sha: payload.pull_request.head.sha,
+            head_branch: opened35.pull_request.head.ref,
+            head_sha: opened35.pull_request.head.sha,
             status: 'completed',
             //conclusion: 'success',
             conclusion: 'neutral',
@@ -450,7 +456,7 @@ describe('owners bot', () => {
           return true;
         }).reply(200);
 
-      await probot.receive({event: 'pull_request_review', payload: pullRequestReviewPayload});
+      await probot.receive({event: 'pull_request_review', payload: review35});
     });
   });
 });
