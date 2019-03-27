@@ -1,3 +1,19 @@
+/**
+ * Copyright 2019 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS-IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 const nock = require('nock')
 const owners = require('..')
 const {Probot} = require('probot')
@@ -23,6 +39,8 @@ const checkruns35Empty = require('./fixtures/check-runs/check-runs.get.35.empty'
 const checkRunsCreate = require('./fixtures/check-runs/check-runs.create');
 
 const pullRequest35 = require('./fixtures/pulls/pull_request.35');
+
+const teams = require('./fixtures/teams/teams');
 
 
 nock.disableNetConnect();
@@ -106,6 +124,10 @@ describe('owners bot', () => {
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
         .reply(200, files35);
 
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/teams')
+        .reply(200, teams);
+
       // We need the reviews to check if a pull request has been approved or
       // not.
       nock('https://api.github.com')
@@ -148,6 +170,10 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
         .reply(200, files35);
+
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/teams')
+        .reply(200, teams);
 
       // We need the reviews to check if a pull request has been approved or
       // not.
@@ -197,6 +223,10 @@ describe('owners bot', () => {
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
         .reply(200, files35);
 
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/teams')
+        .reply(200, teams);
+
       // We need the reviews to check if a pull request has been approved or
       // not.
       nock('https://api.github.com')
@@ -236,6 +266,10 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
         .reply(200, files35Multiple);
+
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/teams')
+        .reply(200, teams);
 
       // We need the reviews to check if a pull request has been approved or
       // not.
@@ -278,6 +312,10 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35')
         .reply(200, pullRequest35);
+
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/teams')
+        .reply(200, teams);
 
       // We need the list of files on a pull request to evaluate the required
       // reviewers.
@@ -332,6 +370,10 @@ describe('owners bot', () => {
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
         .reply(200, files35);
 
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/teams')
+        .reply(200, teams);
+
       // We need the reviews to check if a pull request has been approved or
       // not.
       nock('https://api.github.com')
@@ -375,6 +417,10 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/36/files')
         .reply(200, files36);
+
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/teams')
+        .reply(200, teams);
 
       // We need the reviews to check if a pull request has been approved or
       // not.
@@ -426,6 +472,10 @@ describe('owners bot', () => {
       nock('https://api.github.com')
         .get('/repos/erwinmombay/github-owners-bot-test-repo/pulls/35/files')
         .reply(200, files35);
+
+      nock('https://api.github.com')
+        .get('/repos/erwinmombay/github-owners-bot-test-repo/teams')
+        .reply(200, teams);
 
       // We need the reviews to check if a pull request has been approved or
       // not.

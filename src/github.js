@@ -277,4 +277,16 @@ class Review {
   }
 }
 
-module.exports = {PullRequest, PullRequestComment, Label, Sender, Review};
+class Teams {
+
+  constructor(context) {
+    this.context = context;
+    this.github = context.github;
+  }
+
+  async list() {
+    return this.github.repos.listTeams(this.context.repo());
+  }
+}
+
+module.exports = {PullRequest, PullRequestComment, Label, Sender, Review, Teams};
