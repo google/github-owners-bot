@@ -19,35 +19,31 @@ limitations under the License.
 A web service that suggests approvers for a GitHub pull request based on OWNERS
 files and enforces reviews by OWNERS as a GitHub status check.
 
-## Deploying
+## Getting Started
 
-This web server assumes it is running on Google Compute Engine (GCE).
-A few Environment Variables need to be setup on the GCE start-up script.
-(See gce/startup-script.sh)
+- Clone the github-owners-bot repository.
+  `git clone git@github.com:google/github-owners-bot.git ${directory}`
 
-- **REPO** The GitHub repository to clone
-- **APP_DIR** The directory to deploy the app to
-- **REPO_DIR** The directory path on the server to place the git clone
-- **GITHUB_BOT_USERNAME** The username of the bot
-- **GCLOUD_PROJECT** Google Cloud Project Id.
-- **CLOUD_BUCKET**
-- **OAUTH2_CLIENT_ID**
-- **OAUTH2_CLIENT_SECRET**
-- **GITHUB_ACCESS_TOKEN** The Authorization token used to make requests to
-  GitHub. This can be generated in your GitHub settings.
+- Clone the target repository to be evaluated.
+  The github-owners-bot app requires a local copy of the target repository that
+  we evaluate. You will need to set the `GITHUB_REPO_DIR` environment variable
+  to the path of that target repository.
+  ex. `git clone git@github.com:ampproject/amphtml.git ${target_directory}`
 
-#### GITHUB_ACCESS_TOKEN
+- Set the `REPO_DIR` environment variable to the `target_repository` path
+  that was used in the step above.
 
-To Generate a GITHUB_ACCESS_TOKEN see [creating an access token article](https://help.github.com/articles/creating-an-access-token-for-command-line-use/).
-Access Token will need `public_repo` and `repo:status` scopes.
+- Set the `APP_ID` environment variable to your GitHub probot application.
 
-#### GitHub Webhook events
+- Set the `NODE_ENV` environment variable to "development".
 
-- Issue Comment
-- Pull Request
-- Pull Request Review
-- Push
+- Set the `WEBHOOK_SECRET` environment variable to match what you set up
+  on your GitHub Webhook pages.
 
-## Disclaimer
+- Install the `amp-owners-bot` GitHub on the remote target repository (This should
+  be the same repository that you had closed for the local target repository)
 
-This is not an official Google product.
+- Go back into the `github-owners-bot` directory and run `yarn`.
+
+- Run `npm run dev` to start the local server. You can also run `LOG_LEVEL=trace npm run dev`
+  for maximum logging while developing the application.
