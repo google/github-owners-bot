@@ -16,7 +16,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "lodash": "4.17.11",
+    "lodash": "4.17.21",
     "probot": "7.5.0",
     "sleep-promise": "8.0.1",
     "yamljs": "0.3.0"
